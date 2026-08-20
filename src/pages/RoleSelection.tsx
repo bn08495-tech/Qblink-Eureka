@@ -1,0 +1,110 @@
+import { Link } from "react-router-dom";
+import { Users, Building2, ArrowRight, ShieldCheck } from "lucide-react";
+import logo from "@/assets/qblink-logo.png";
+import SEO from "@/components/SEO";
+import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+
+const RoleSelection = () => {
+  const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
+  const email = user?.email ?? null;
+
+  return (
+    <div className="min-h-screen soft-bg flex flex-col items-center justify-center px-4 py-10">
+      <SEO title="Get Started — Qblink" description="Join Qblink as a customer or business and start managing walk-in queues today." path="/auth" />
+      <header className="w-full max-w-5xl flex items-center justify-between mb-12">
+        <Link to="/" className="flex items-center gap-2">
+          <img src={logo} alt="Qblink" className="h-9 w-9 rounded-lg object-contain" />
+          <span className="text-xl font-bold text-foreground">Qblink</span>
+        </Link>
+        <p className="text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link to="/auth/signin" className="text-primary font-semibold hover:underline">Sign In</Link>
+        </p>
+      </header>
+
+      <div className="w-full max-w-3xl text-center mb-10">
+        <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-3">Join Qblink</h1>
+        <p className="text-lg text-muted-foreground">How would you like to use Qblink?</p>
+        {email && (
+          <div className="mt-4 inline-flex flex-col items-center gap-1 text-xs text-muted-foreground bg-card border border-border rounded-xl px-4 py-2">
+            <span>Logged in as: <span className="font-semibold text-foreground">{email}</span></span>
+            <span>Admin access: <span className={`font-semibold ${isAdmin ? "text-primary" : "text-muted-foreground"}`}>{isAdmin ? "Yes" : "No"}</span></span>
+          </div>
+        )}
+      </div>
+
+      <div className={`w-full max-w-5xl grid gap-6 ${isAdmin ? "md:grid-cols-3" : "md:grid-cols-2 max-w-3xl"}`}>
+        <Link
+          to="/auth/business"
+          className="group bg-card rounded-3xl p-8 sm:p-10 card-shadow hover:elevated-shadow transition-all border-2 border-primary/50 hover:border-primary flex flex-col min-h-[320px] relative overflow-hidden"
+        >
+          <div className="absolute top-4 right-4">
+            <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider">
+              Recommended for Owners
+            </span>
+          </div>
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 shrink-0">
+            <Building2 className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Business & Counters</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">
+            Set up digital queues for your clinic, restaurant, salon, or store. Go live in under 2 minutes with zero hardware.
+          </p>
+          <div className="text-xs font-semibold text-primary mb-4 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span>Free Forever Pilot · No Credit Card Required</span>
+          </div>
+          <span className="inline-flex items-center gap-2 text-primary font-bold text-sm group-hover:gap-3 transition-all min-h-[44px]">
+            Start Business Account <ArrowRight className="w-4 h-4" />
+          </span>
+        </Link>
+
+        <Link
+          to="/auth/customer"
+          className="group bg-card rounded-3xl p-8 sm:p-10 card-shadow hover:elevated-shadow transition-all border border-border hover:border-border/80 flex flex-col min-h-[320px] opacity-90 hover:opacity-100"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-6 shrink-0">
+            <Users className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Customer Profile</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">
+            <strong>Visiting a venue?</strong> You do <span className="underline font-bold text-foreground">not</span> need to sign up—just scan the QR code at the business!
+          </p>
+          <div className="p-3 rounded-xl bg-muted/40 border border-border/60 text-xs text-muted-foreground mb-6">
+            Sign up here only if you want to bookmark favorite businesses or review your past queue visits.
+          </div>
+          <span className="inline-flex items-center gap-2 text-muted-foreground font-semibold text-sm group-hover:gap-3 group-hover:text-foreground transition-all min-h-[44px]">
+            Optional Customer Sign In <ArrowRight className="w-4 h-4" />
+          </span>
+        </Link>
+
+        {isAdmin && (
+          <Link
+            to="/admin"
+            className="group bg-card rounded-3xl p-10 card-shadow hover:elevated-shadow transition-all border border-border hover:border-primary/40 flex flex-col min-h-[320px]"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 shrink-0">
+              <ShieldCheck className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-3">Admin Panel</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-8 flex-1">
+              Manage the Qblink platform — monitor businesses, customers, queues, and revenue across the network.
+            </p>
+            <span className="inline-flex items-center gap-2 text-primary font-semibold text-sm group-hover:gap-3 transition-all min-h-[44px]">
+              Open Admin <ArrowRight className="w-4 h-4" />
+            </span>
+          </Link>
+        )}
+      </div>
+
+      <p className="text-xs text-muted-foreground mt-10 text-center">
+        By signing up, you agree to our <Link to="/" className="text-primary hover:underline">Terms</Link> and{" "}
+        <Link to="/" className="text-primary hover:underline">Privacy Policy</Link>
+      </p>
+    </div>
+  );
+};
+
+export default RoleSelection;

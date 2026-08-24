@@ -17,7 +17,8 @@ describe("ReviewsSection", () => {
     expect(screen.getByText("Sheetal Doshi")).toBeInTheDocument();
     expect(screen.getByText("Vaishali Doshi")).toBeInTheDocument();
 
-    expect(screen.getByText(/Apex Multi-Speciality Clinic/i)).toBeInTheDocument();
+    expect(screen.getByText(/Foreign Language Trainer/i)).toBeInTheDocument();
+    expect(screen.getByText(/Elite Foreign Language Academy/i)).toBeInTheDocument();
     expect(screen.getByText(/The Artisan Bistro & Roastery/i)).toBeInTheDocument();
     expect(screen.getByText(/Aura Health & Wellness Studios/i)).toBeInTheDocument();
   });

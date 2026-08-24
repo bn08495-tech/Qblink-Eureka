@@ -9,7 +9,7 @@ export interface ReviewItem {
   name: string;
   role: string;
   venue: string;
-  category: "clinic" | "cafe" | "salon" | "customer" | "retail";
+  category: "education" | "clinic" | "cafe" | "salon" | "customer" | "retail";
   categoryLabel: string;
   rating: number;
   quote: string;
@@ -22,14 +22,14 @@ const INITIAL_REVIEWS: ReviewItem[] = [
   {
     id: "rev-pooja-shah",
     name: "Pooja Shah",
-    role: "Lead Clinic Administrator",
-    venue: "Apex Multi-Speciality Clinic",
-    category: "clinic",
-    categoryLabel: "🏥 Healthcare & Clinic",
+    role: "Foreign Language Trainer",
+    venue: "Elite Foreign Language Academy",
+    category: "education",
+    categoryLabel: "🎓 Training & Education",
     rating: 5,
     quote:
-      "Qblink completely eliminated our waiting room chaos. Patients scan the QR code at reception and wait comfortably in their cars or the nearby garden. Our front desk staff no longer gets bombarded with 'How much longer?', and our patient satisfaction score jumped from 3.6 to 4.9 stars.",
-    metricBadge: "84% fewer front-desk queries · Zero lobby crowd",
+      "Managing one-on-one student oral assessments, trial classes, and walk-in consultation sessions used to cause severe hallway crowding. With Qblink, students and parents scan our desk QR code, practice or grab coffee downstairs, and get buzzed right when their test or counseling slot begins. It transformed our academy's daily student flow.",
+    metricBadge: "Zero hallway crowd · 100% on-time sessions",
     verified: true,
     avatarColor: "from-blue-500 to-indigo-600",
   },
@@ -100,7 +100,7 @@ export const ReviewsSection = () => {
   const [formName, setFormName] = useState("");
   const [formRole, setFormRole] = useState("");
   const [formVenue, setFormVenue] = useState("");
-  const [formCategory, setFormCategory] = useState<"clinic" | "cafe" | "salon" | "customer" | "retail">("clinic");
+  const [formCategory, setFormCategory] = useState<"education" | "clinic" | "cafe" | "salon" | "customer" | "retail">("education");
   const [formRating, setFormRating] = useState(5);
   const [formQuote, setFormQuote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -130,6 +130,7 @@ export const ReviewsSection = () => {
     setIsSubmitting(true);
 
     const categoryMap: Record<string, string> = {
+      education: "🎓 Training & Education",
       clinic: "🏥 Healthcare & Clinic",
       cafe: "☕ Dining & Hospitality",
       salon: "💇 Wellness & Salons",
@@ -138,7 +139,8 @@ export const ReviewsSection = () => {
     };
 
     const colorMap: Record<string, string> = {
-      clinic: "from-blue-500 to-indigo-600",
+      education: "from-blue-500 to-indigo-600",
+      clinic: "from-cyan-500 to-blue-600",
       cafe: "from-amber-500 to-orange-600",
       salon: "from-emerald-500 to-teal-600",
       customer: "from-rose-500 to-pink-600",
@@ -220,6 +222,7 @@ export const ReviewsSection = () => {
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar">
           {[
             { id: "all", label: "All Reviews" },
+            { id: "education", label: "🎓 Education & Training" },
             { id: "clinic", label: "🏥 Clinics & Health" },
             { id: "cafe", label: "☕ Dining & Cafes" },
             { id: "salon", label: "💇 Salons & Spas" },
@@ -421,6 +424,7 @@ export const ReviewsSection = () => {
                       onChange={(e) => setFormCategory(e.target.value as any)}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
                     >
+                      <option value="education">🎓 Education & Language Training</option>
                       <option value="clinic">🏥 Healthcare & Clinic</option>
                       <option value="cafe">☕ Dining & Cafe</option>
                       <option value="salon">💇 Salon & Wellness</option>

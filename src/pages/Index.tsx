@@ -14,6 +14,7 @@ import { LiveQueueDemo } from "@/components/qb/LiveQueueDemo";
 import { InterviewFAQ } from "@/components/qb/InterviewFAQ";
 import { Signature } from "@/components/qb/Signature";
 import DemoVideosSection from "@/components/DemoVideosSection";
+import { ReviewsSection } from "@/components/qb/ReviewsSection";
 
 const ChaosToClarityExperience = lazy(() => import("@/features/chaosToClarity/ChaosToClarityExperience"));
 const IndustryMorphingExperience = lazy(() => import("@/features/industryMorphing/IndustryMorphingExperience"));
@@ -108,6 +109,7 @@ const Index = () => (
       <div id="roi" className="py-12 sm:py-16 px-4 sm:px-6 max-w-7xl mx-auto">
         <BusinessRoiCalculator />
       </div>
+      <ReviewsSection />
       <DemoVideosSection />
       <Pricing />
       <div id="faq">

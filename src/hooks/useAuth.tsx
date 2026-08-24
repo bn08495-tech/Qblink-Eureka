@@ -1,43 +1,78 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { createContext, useContext, ReactNode, useMemo } from "react";
+import { useUser, useClerk, useSession } from "@clerk/clerk-react";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface AppUser {
+  id: string;
+  email: string | null;
+  phone?: string | null;
+  fullName?: string | null;
+  imageUrl?: string | null;
+  user_metadata?: {
+    full_name?: string;
+    name?: string;
+    avatar_url?: string;
+  };
+  clerkUser?: ReturnType<typeof useUser>["user"];
+}
+
 interface AuthCtx {
-  session: Session | null;
-  user: User | null;
+  session: any;
+  user: AppUser | null;
   loading: boolean;
   signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthCtx>({ session: null, user: null, loading: true, signOut: async () => {} });
+const AuthContext = createContext<AuthCtx>({
+  session: null,
+  user: null,
+  loading: true,
+  signOut: async () => {},
+});
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user: clerkUser, isLoaded: clerkLoaded, isSignedIn } = useUser();
+  const { session: clerkSession } = useSession();
+  const clerk = useClerk();
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setLoading(false);
-    });
+  const user: AppUser | null = useMemo(() => {
+    if (!isSignedIn || !clerkUser) return null;
+    const email = clerkUser.primaryEmailAddress?.emailAddress ?? clerkUser.emailAddresses[0]?.emailAddress ?? null;
+    const fullName = clerkUser.fullName || clerkUser.firstName || email?.split("@")[0] || "User";
+    const imageUrl = clerkUser.imageUrl;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    return {
+      id: clerkUser.id,
+      email,
+      fullName,
+      imageUrl,
+      user_metadata: {
+        full_name: fullName,
+        name: fullName,
+        avatar_url: imageUrl,
+      },
+      clerkUser,
+    };
+  }, [clerkUser, isSignedIn]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await clerk.signOut();
+    await supabase.auth.signOut().catch(() => {});
   };
 
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, loading, signOut }}>
+    <AuthContext.Provider
+      value={{
+        session: clerkSession ?? (user ? { user } : null),
+        user,
+        loading: !clerkLoaded,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => useContext(AuthContext);
+

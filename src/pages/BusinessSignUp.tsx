@@ -7,7 +7,8 @@ import { Mail, Lock, Building2, Tag, FileText, MapPin, ArrowLeft, Sparkles, Chec
 import logo from "@/assets/qblink-logo.png";
 import SEO from "@/components/SEO";
 import { GoogleButton, AuthDivider } from "@/components/auth/GooglePickerModal";
-import { signInWithGoogle, ensureRoleAndProfile } from "@/lib/auth/authService";
+import { useSignIn, useSignUp } from "@clerk/clerk-react";
+import { prepareGoogleAuth, ensureRoleAndProfile } from "@/lib/auth/authService";
 import { INDUSTRIES, getIndustryDefaults, type IndustryDefaults } from "@/lib/industryDefaults";
 
 const ALERT_LABELS: Record<string, string> = {
@@ -25,6 +26,7 @@ const ALERT_LABELS: Record<string, string> = {
 const ARRIVAL_WINDOWS = [5, 10, 15, 20];
 
 const BusinessSignUp = () => {
+  const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -35,6 +37,8 @@ const BusinessSignUp = () => {
   const [googleBusy, setGoogleBusy] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { signIn } = useSignIn();
+  const { signUp } = useSignUp();
   const defaults = getIndustryDefaults(category);
   const [overrides, setOverrides] = useState<IndustryDefaults>(defaults);
 
@@ -46,6 +50,15 @@ const BusinessSignUp = () => {
   useEffect(() => {
     if (user) navigate("/dashboard");
   }, [user, navigate]);
+
+  const handleStep1Submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!businessName.trim()) {
+      toast.error("Please enter your business name.");
+      return;
+    }
+    setStep(2);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +94,7 @@ const BusinessSignUp = () => {
   const continueWithGoogle = async () => {
     if (!businessName.trim()) {
       toast.error("Enter your business name before continuing with Google.");
+      setStep(1);
       return;
     }
     setGoogleBusy(true);
@@ -90,9 +104,21 @@ const BusinessSignUp = () => {
         "qblink.pendingBusiness",
         JSON.stringify({ name: businessName, category, description, address, default_settings: overrides }),
       );
-      await signInWithGoogle("business");
-      await ensureRoleAndProfile();
-      await createPendingBusiness();
+      prepareGoogleAuth("business");
+      const redirectUrlComplete = "/dashboard";
+      if (signUp) {
+        await signUp.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/sso-callback",
+          redirectUrlComplete,
+        });
+      } else if (signIn) {
+        await signIn.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/sso-callback",
+          redirectUrlComplete,
+        });
+      }
     } catch (err: any) {
       toast.error(err?.message ?? "Couldn't sign in with Google");
     } finally {
@@ -131,157 +157,211 @@ const BusinessSignUp = () => {
 
   return (
     <div className="min-h-screen soft-bg flex items-center justify-center px-4 py-10">
-      <SEO title="Sign up your business — Qblink" description="Run a smarter walk-in operation with Qblink's hardware-free customer flow platform — no app, remote waiting, live visibility, and AI recommendations." path="/auth/business" />
+      <SEO title="Sign up your business — Qblink" description="Run a smarter walk-in operation with Qblink's hardware-free customer flow platform." path="/auth/business" />
       <div className="w-full max-w-md">
-        <Link to="/auth" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </Link>
+        <button
+          type="button"
+          onClick={() => (step === 2 ? setStep(1) : navigate("/auth"))}
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
+        >
+          <ArrowLeft className="w-4 h-4" /> {step === 2 ? "Change business name" : "Back"}
+        </button>
 
         <div className="text-center mb-8">
           <img src={logo} alt="Qblink" className="h-10 w-10 rounded-lg object-contain mx-auto mb-3" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">Register Your Business</h1>
-          <p className="text-sm text-muted-foreground">Set up your customer flow profile</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">
+            {step === 1 ? "Register Your Business" : "Choose Sign Up Method"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {step === 1 ? "Enter your business name to get started" : `Setting up ${businessName}`}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-8 card-shadow space-y-4">
-          <GoogleButton onClick={continueWithGoogle} loading={googleBusy} />
-          <p className="text-xs text-center text-muted-foreground -mt-1">
-            <span className="font-semibold text-primary">Recommended</span> · Use your business Google account
-          </p>
-          <AuthDivider />
+        {step === 1 ? (
+          /* STEP 1: BUSINESS NAME INPUT SCREEN */
+          <form onSubmit={handleStep1Submit} className="bg-card rounded-2xl p-6 sm:p-8 card-shadow space-y-6 animate-in fade-in duration-300">
+            <Field icon={<Building2 className="w-4 h-4 text-primary" />} label="Business Name">
+              <input
+                type="text"
+                value={businessName}
+                onChange={e => setBusinessName(e.target.value)}
+                required
+                autoFocus
+                placeholder="e.g. Sharma Dental Clinic"
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors font-medium"
+              />
+            </Field>
+            <p className="text-xs text-muted-foreground -mt-3">
+              This name will be displayed on your digital queue and QR codes for customers.
+            </p>
 
-          <Field icon={<Building2 className="w-4 h-4" />} label="Business Name">
-            <input type="text" value={businessName} onChange={e => setBusinessName(e.target.value)} required placeholder="e.g. Sharma Dental Clinic"
-              className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
-          </Field>
-          <Field icon={<Mail className="w-4 h-4" />} label="Business Email">
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="business@email.com"
-              className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
-          </Field>
-          <Field icon={<Lock className="w-4 h-4" />} label="Password">
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} placeholder="••••••••"
-              className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
-          </Field>
-          <Field icon={<Tag className="w-4 h-4" />} label="Industry">
-            <select value={category} onChange={e => setCategory(e.target.value)}
-              className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors appearance-none">
-              {INDUSTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </Field>
+            <button
+              type="submit"
+              className="w-full gradient-bg text-primary-foreground py-3.5 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+            >
+              <span>Continue</span>
+            </button>
 
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" />
-                <p className="text-xs font-semibold text-foreground">Queue Configuration · {category}</p>
+            <p className="text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link to="/auth/signin" className="text-primary font-semibold hover:underline">Sign In</Link>
+            </p>
+          </form>
+        ) : (
+          /* STEP 2: GOOGLE AUTH OR EMAIL FORM SCREEN */
+          <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-6 sm:p-8 card-shadow space-y-4 animate-in fade-in slide-in-from-right-2 duration-300">
+            <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <Building2 className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-sm font-semibold text-foreground truncate">{businessName}</span>
               </div>
               <button
                 type="button"
-                onClick={() => setOverrides(getIndustryDefaults(category))}
-                className="text-xs font-semibold text-primary hover:underline"
+                onClick={() => setStep(1)}
+                className="text-xs font-semibold text-primary hover:underline shrink-0 ml-2"
               >
-                Reset
+                Edit
               </button>
             </div>
 
-            {/* Arrival window */}
-            <div>
-              <p className="text-xs font-medium text-foreground mb-1.5">Arrival window</p>
-              <div className="flex flex-wrap gap-1.5">
-                {ARRIVAL_WINDOWS.map(m => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setOverrides({ ...overrides, arrival_window_minutes: m })}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors ${
-                      overrides.arrival_window_minutes === m
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-background text-muted-foreground border-border hover:bg-muted"
-                    }`}
-                  >
-                    {m} min
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Estimated service time */}
-            <div>
-              <p className="text-xs font-medium text-foreground mb-1.5">
-                Estimated service time · <span className="text-primary">{overrides.estimated_service_time} min</span>
+            <div className="pt-2">
+              <GoogleButton onClick={continueWithGoogle} loading={googleBusy} label="Continue with Google" />
+              <p className="text-xs text-center text-muted-foreground mt-2">
+                <span className="font-semibold text-primary">Recommended</span> · Instant setup with Google
               </p>
-              <input
-                type="range"
-                min={2}
-                max={60}
-                step={1}
-                value={overrides.estimated_service_time}
-                onChange={e => setOverrides({ ...overrides, estimated_service_time: Number(e.target.value) })}
-                className="w-full accent-primary"
-              />
             </div>
 
-            {/* Party size toggle */}
-            <MiniToggle
-              label="Party size on join"
-              checked={overrides.party_size_enabled}
-              onChange={v => setOverrides({ ...overrides, party_size_enabled: v })}
-            />
+            <AuthDivider label="or sign up with email" />
 
-            {/* Alerts */}
-            {defaults.alerts.length > 0 && (
+            <Field icon={<Mail className="w-4 h-4" />} label="Business Email">
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="business@email.com"
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
+            </Field>
+            <Field icon={<Lock className="w-4 h-4" />} label="Password">
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} placeholder="••••••••"
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
+            </Field>
+            <Field icon={<Tag className="w-4 h-4" />} label="Industry">
+              <select value={category} onChange={e => setCategory(e.target.value)}
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors appearance-none">
+                {INDUSTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </Field>
+
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-semibold text-foreground">Queue Configuration · {category}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOverrides(getIndustryDefaults(category))}
+                  className="text-xs font-semibold text-primary hover:underline"
+                >
+                  Reset
+                </button>
+              </div>
+
+              {/* Arrival window */}
               <div>
-                <p className="text-xs font-medium text-foreground mb-1.5">Alerts</p>
-                <div className="space-y-1.5">
-                  {defaults.alerts.map(key => {
-                    const on = overrides.alerts.includes(key);
-                    return (
-                      <MiniToggle
-                        key={key}
-                        label={ALERT_LABELS[key] ?? key}
-                        checked={on}
-                        onChange={v =>
-                          setOverrides({
-                            ...overrides,
-                            alerts: v
-                              ? [...overrides.alerts, key]
-                              : overrides.alerts.filter(a => a !== key),
-                          })
-                        }
-                      />
-                    );
-                  })}
+                <p className="text-xs font-medium text-foreground mb-1.5">Arrival window</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {ARRIVAL_WINDOWS.map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setOverrides({ ...overrides, arrival_window_minutes: m })}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors ${
+                        overrides.arrival_window_minutes === m
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-muted-foreground border-border hover:bg-muted"
+                      }`}
+                    >
+                      {m} min
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
 
-            <p className="text-xs text-muted-foreground flex items-start gap-1">
-              <Check className="w-3 h-3 text-primary mt-0.5 shrink-0" />
-              Starts from {category} defaults. You can change any of these later in Settings.
+              {/* Estimated service time */}
+              <div>
+                <p className="text-xs font-medium text-foreground mb-1.5">
+                  Estimated service time · <span className="text-primary">{overrides.estimated_service_time} min</span>
+                </p>
+                <input
+                  type="range"
+                  min={2}
+                  max={60}
+                  step={1}
+                  value={overrides.estimated_service_time}
+                  onChange={e => setOverrides({ ...overrides, estimated_service_time: Number(e.target.value) })}
+                  className="w-full accent-primary"
+                />
+              </div>
+
+              {/* Party size toggle */}
+              <MiniToggle
+                label="Party size on join"
+                checked={overrides.party_size_enabled}
+                onChange={v => setOverrides({ ...overrides, party_size_enabled: v })}
+              />
+
+              {/* Alerts */}
+              {defaults.alerts.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-foreground mb-1.5">Alerts</p>
+                  <div className="space-y-1.5">
+                    {defaults.alerts.map(key => {
+                      const on = overrides.alerts.includes(key);
+                      return (
+                        <MiniToggle
+                          key={key}
+                          label={ALERT_LABELS[key] ?? key}
+                          checked={on}
+                          onChange={v =>
+                            setOverrides({
+                              ...overrides,
+                              alerts: v
+                                ? [...overrides.alerts, key]
+                                : overrides.alerts.filter(a => a !== key),
+                            })
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground flex items-start gap-1">
+                <Check className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                Starts from {category} defaults. You can change any of these later in Settings.
+              </p>
+
+              <ImpactPreview overrides={overrides} />
+            </div>
+
+            <Field icon={<FileText className="w-4 h-4" />} label="Description (optional)">
+              <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description of your business" rows={2}
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors resize-none" />
+            </Field>
+            <Field icon={<MapPin className="w-4 h-4" />} label="Address (optional)">
+              <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="City or area"
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
+            </Field>
+
+            <button type="submit" disabled={loading}
+              className="w-full gradient-bg text-primary-foreground py-3.5 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+              {loading ? "Creating..." : "Create Business Account"}
+            </button>
+
+            <p className="text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link to="/auth/signin" className="text-primary font-semibold hover:underline">Sign In</Link>
             </p>
-
-            <ImpactPreview overrides={overrides} />
-          </div>
-
-          <Field icon={<FileText className="w-4 h-4" />} label="Description (optional)">
-            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description of your business" rows={2}
-              className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors resize-none" />
-          </Field>
-          <Field icon={<MapPin className="w-4 h-4" />} label="Address (optional)">
-            <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="City or area"
-              className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
-          </Field>
-
-          <button type="submit" disabled={loading}
-            className="w-full gradient-bg text-primary-foreground py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50">
-            {loading ? "Creating..." : "Create Business Account"}
-          </button>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link to="/auth/signin" className="text-primary font-semibold hover:underline">Sign In</Link>
-          </p>
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );

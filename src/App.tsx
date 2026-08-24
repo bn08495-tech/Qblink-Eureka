@@ -61,6 +61,7 @@ const PitchDemo = lazy(() => import("./pages/PitchDemo.tsx"));
 const RoiCalculatorPage = lazy(() => import("./pages/RoiCalculatorPage.tsx"));
 const ChaosToClarityPage = lazy(() => import("./pages/ChaosToClarityPage.tsx"));
 const IndustryMorphPage = lazy(() => import("./pages/IndustryMorphPage.tsx"));
+const SsoCallback = lazy(() => import("./pages/SsoCallback.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -122,6 +123,7 @@ const App = () => (
             <Route path="/auth/forgot-password" element={<ForgotPassword />} />
             <Route path="/auth/customer" element={<CustomerSignUp />} />
             <Route path="/auth/business" element={<BusinessSignUp />} />
+            <Route path="/sso-callback" element={<SsoCallback />} />
             <Route path="/customer-dashboard" element={<CustomerDashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/analytics" element={<Analytics />} />

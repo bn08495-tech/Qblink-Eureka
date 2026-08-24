@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://qblink-real.lovable.app/</loc>
+    <loc>https://qblink-devansh.vercel.app/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://qblink-real.lovable.app/auth</loc>
+    <loc>https://qblink-devansh.vercel.app/auth</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://qblink-real.lovable.app/auth/signin</loc>
+    <loc>https://qblink-devansh.vercel.app/auth/signin</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://qblink-real.lovable.app/auth/customer</loc>
+    <loc>https://qblink-devansh.vercel.app/auth/customer</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://qblink-real.lovable.app/auth/business</loc>
+    <loc>https://qblink-devansh.vercel.app/auth/business</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://qblink-real.lovable.app/affiliate</loc>
+    <loc>https://qblink-devansh.vercel.app/affiliate</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://qblink-real.lovable.app/install</loc>
+    <loc>https://qblink-devansh.vercel.app/install</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

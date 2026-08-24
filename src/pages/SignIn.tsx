@@ -9,6 +9,9 @@ import { Mail, Lock, Phone, AlertCircle, Eye, EyeOff } from "lucide-react";
 import logo from "@/assets/qblink-logo.png";
 import SEO from "@/components/SEO";
 import { COUNTRY_CODES, normalizePhone, phoneToEmail, isValidPhone } from "@/lib/phoneAuth";
+import { useSignIn, useSignUp } from "@clerk/clerk-react";
+import { GoogleButton, AuthDivider } from "@/components/auth/GooglePickerModal";
+import { prepareGoogleAuth } from "@/lib/auth/authService";
 
 const SignIn = () => {
   const [mode, setMode] = useState<"phone" | "email">("phone");
@@ -18,16 +21,44 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
+  const { signIn } = useSignIn();
+  const { signUp } = useSignUp();
 
   const nextUrl = searchParams.get("next");
   const safeNext = nextUrl && nextUrl.startsWith("/") && !nextUrl.startsWith("//") ? nextUrl : null;
   const signupHref = safeNext ? `/auth/customer?next=${encodeURIComponent(safeNext)}` : "/auth";
+
+  const handleGoogle = async () => {
+    setGoogleBusy(true);
+    try {
+      prepareGoogleAuth("customer", safeNext ?? undefined);
+      const redirectUrlComplete = safeNext || "/customer-dashboard";
+      if (signIn) {
+        await signIn.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/sso-callback",
+          redirectUrlComplete,
+        });
+      } else if (signUp) {
+        await signUp.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/sso-callback",
+          redirectUrlComplete,
+        });
+      }
+    } catch (err: any) {
+      toast.error(err?.message ?? "Couldn't sign in with Google");
+    } finally {
+      setGoogleBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (user && !authLoading && !roleLoading && !adminLoading) {
@@ -105,6 +136,8 @@ const SignIn = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-6 sm:p-8 card-shadow space-y-4">
+          <GoogleButton onClick={handleGoogle} loading={googleBusy} label="Sign in with Google" />
+          <AuthDivider />
           <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-muted">
             <button type="button" onClick={() => setMode("phone")}
               className={`py-2 rounded-lg text-sm font-medium transition ${mode === "phone" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>

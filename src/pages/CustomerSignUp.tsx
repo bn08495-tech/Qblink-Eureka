@@ -8,7 +8,8 @@ import logo from "@/assets/qblink-logo.png";
 import SEO from "@/components/SEO";
 import { COUNTRY_CODES, normalizePhone, phoneToEmail, isValidPhone } from "@/lib/phoneAuth";
 import { GoogleButton, AuthDivider } from "@/components/auth/GooglePickerModal";
-import { signInWithGoogle } from "@/lib/auth/authService";
+import { useSignIn, useSignUp } from "@clerk/clerk-react";
+import { prepareGoogleAuth } from "@/lib/auth/authService";
 
 const CustomerSignUp = () => {
   const [mode, setMode] = useState<"phone" | "email">("phone");
@@ -23,6 +24,8 @@ const CustomerSignUp = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { signIn } = useSignIn();
+  const { signUp } = useSignUp();
 
   const nextUrl = searchParams.get("next");
   const safeNext = nextUrl && nextUrl.startsWith("/") && !nextUrl.startsWith("//") ? nextUrl : null;
@@ -37,7 +40,21 @@ const CustomerSignUp = () => {
     setGoogleBusy(true);
     setFormError(null);
     try {
-      await signInWithGoogle("customer", safeNext ?? undefined);
+      prepareGoogleAuth("customer", safeNext ?? undefined);
+      const redirectUrlComplete = safeNext || "/customer-dashboard";
+      if (signUp) {
+        await signUp.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/sso-callback",
+          redirectUrlComplete,
+        });
+      } else if (signIn) {
+        await signIn.authenticateWithRedirect({
+          strategy: "oauth_google",
+          redirectUrl: "/sso-callback",
+          redirectUrlComplete,
+        });
+      }
     } catch (err: any) {
       const msg = err?.message ?? "Couldn't sign in with Google";
       setFormError(msg);

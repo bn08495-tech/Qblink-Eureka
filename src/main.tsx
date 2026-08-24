@@ -1,3 +1,4 @@
+import { ClerkProvider } from "@clerk/clerk-react";
 import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
@@ -22,9 +23,17 @@ const vitals = observeWebVitals((snapshot) => {
 });
 (window as unknown as Record<string, unknown>).__qbWebVitalsRecorder = vitals.recorder;
 
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+if (!PUBLISHABLE_KEY) {
+  console.warn("Missing VITE_CLERK_PUBLISHABLE_KEY in environment variables.");
+}
+
 createRoot(document.getElementById("root")!).render(
   <HelmetProvider>
-    <App />
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY || ""} afterSignOutUrl="/">
+      <App />
+    </ClerkProvider>
   </HelmetProvider>
 );
 

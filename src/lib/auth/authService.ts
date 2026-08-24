@@ -1,66 +1,102 @@
 /**
- * Auth abstraction layer.
- *
- * Google sign-in uses real OAuth via Lovable Cloud managed credentials.
- * There is no client-side OTP generation or verification: verification
- * state is only ever read from the auth server, never asserted by the client.
+ * Auth abstraction layer with Clerk Google Authentication support.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 
 export type AuthRole = "customer" | "business";
 
-/**
- * Real Google OAuth sign-in. Redirects to Google (or completes in-place in the
- * preview popup flow). The desired role is stashed so the post-login bootstrap
- * can provision role/profile rows once the session exists.
- */
-export async function signInWithGoogle(role: AuthRole, redirectPath?: string): Promise<void> {
-  try {
-    sessionStorage.setItem("qblink.pendingRole", role);
-    if (redirectPath) sessionStorage.setItem("qblink.pendingNext", redirectPath);
-  } catch { /* storage unavailable */ }
-
-  const result = await lovable.auth.signInWithOAuth("google", {
-    redirect_uri: window.location.origin,
-  });
-
-  if (result.error) throw result.error instanceof Error ? result.error : new Error(String(result.error));
-  if (result.redirected) return;
-
-  await ensureRoleAndProfile();
+export interface UserLike {
+  id: string;
+  fullName?: string | null;
+  primaryEmailAddress?: { emailAddress?: string } | null;
+  emailAddresses?: Array<{ emailAddress?: string }>;
 }
 
 /**
- * Idempotently provision the user_roles / customer_profiles rows for the
- * currently signed-in user. Safe to call after any successful sign-in.
+ * Prepares session storage with the user's role before triggering Google OAuth.
  */
-export async function ensureRoleAndProfile(): Promise<void> {
-  const { data } = await supabase.auth.getUser();
-  const user = data.user;
-  if (!user) return;
+export function prepareGoogleAuth(role: AuthRole, redirectPath?: string): void {
+  try {
+    sessionStorage.setItem("qblink.pendingRole", role);
+    if (redirectPath) sessionStorage.setItem("qblink.pendingNext", redirectPath);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/**
+ * Idempotently provisions user_roles / customer_profiles / business rows for the
+ * signed-in Clerk user and returns the destination URL.
+ */
+export async function ensureRoleAndProfile(clerkUser?: UserLike | null): Promise<string> {
+  if (!clerkUser) return "/auth";
+
+  const userId = clerkUser.id;
+  const email = clerkUser.primaryEmailAddress?.emailAddress ?? clerkUser.emailAddresses?.[0]?.emailAddress ?? "";
+  const fullName = clerkUser.fullName || email.split("@")[0] || "User";
 
   let role: AuthRole = "customer";
-  try {
-    const stored = sessionStorage.getItem("qblink.pendingRole");
-    if (stored === "business" || stored === "customer") role = stored;
-  } catch { /* ignore */ }
+  let targetNext: string | null = null;
 
-  const { data: existing } = await supabase
+  try {
+    const storedRole = sessionStorage.getItem("qblink.pendingRole");
+    if (storedRole === "business" || storedRole === "customer") role = storedRole;
+    targetNext = sessionStorage.getItem("qblink.pendingNext");
+  } catch {
+    /* ignore */
+  }
+
+  const { data: existingRoles } = await supabase
     .from("user_roles")
     .select("role")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .limit(1);
 
-  if (!existing || existing.length === 0) {
-    await supabase.from("user_roles").insert({ user_id: user.id, role });
+  if (!existingRoles || existingRoles.length === 0) {
+    await supabase.from("user_roles").insert({ user_id: userId, role });
     if (role === "customer") {
       await supabase.from("customer_profiles").insert({
-        user_id: user.id,
-        full_name: (user.user_metadata?.full_name as string) || user.email?.split("@")[0] || "Customer",
+        user_id: userId,
+        full_name: fullName,
       });
     }
+  } else {
+    role = (existingRoles[0]?.role as AuthRole) || role;
   }
+
+  // Create stashed business draft if exists
+  try {
+    const draftRaw = sessionStorage.getItem("qblink.pendingBusiness");
+    if (draftRaw) {
+      const draft = JSON.parse(draftRaw);
+      const { data: existingBiz } = await supabase
+        .from("businesses")
+        .select("id")
+        .eq("owner_id", userId)
+        .limit(1);
+
+      if (!existingBiz || existingBiz.length === 0) {
+        await supabase.from("businesses").insert({
+          owner_id: userId,
+          name: draft.name,
+          category: draft.category,
+          description: draft.description || null,
+          address: draft.address || null,
+          default_settings: draft.default_settings || {},
+        });
+      }
+      sessionStorage.removeItem("qblink.pendingBusiness");
+    }
+  } catch {
+    /* ignore */
+  }
+
+  if (targetNext && targetNext.startsWith("/")) {
+    sessionStorage.removeItem("qblink.pendingNext");
+    return targetNext;
+  }
+
+  return role === "business" ? "/dashboard" : "/customer-dashboard";
 }
 
 /* --------------------- Verification-state helpers ---------------------- */
@@ -73,10 +109,6 @@ export interface VerificationStatus {
   primaryEmail: string | null;
 }
 
-/**
- * Read verification flags from the auth server. Only server-confirmed
- * timestamps are trusted — client-set metadata is never treated as proof.
- */
 export async function getVerificationStatus(): Promise<VerificationStatus> {
   const { data } = await supabase.auth.getUser();
   const u = data.user;
@@ -99,3 +131,4 @@ export async function isPhoneVerified(): Promise<boolean> {
 export async function isEmailVerified(): Promise<boolean> {
   return (await getVerificationStatus()).emailVerified;
 }
+

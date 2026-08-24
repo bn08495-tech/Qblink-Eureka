@@ -9,6 +9,7 @@ import AnimatedSection from "@/components/AnimatedSection";
 import SectionHeading from "@/components/SectionHeading";
 import PrefillNotice from "@/components/PrefillNotice";
 import SEO from "@/components/SEO";
+import { PUBLIC_SITE_URL } from "@/lib/publicUrl";
 
 const perks = [
   { icon: Handshake, title: "Who Can Join", desc: "Consultants, sales partners, agencies, local business connectors, and anyone with B2B reach." },
@@ -24,7 +25,7 @@ const steps = [
   { num: "4", title: "Earn Rewards", desc: "Get commissions for every successful referral that converts." },
 ];
 
-const SITE = "https://qblink-real.lovable.app";
+const SITE = PUBLIC_SITE_URL;
 const affiliateJsonLd = [
   {
     "@context": "https://schema.org",

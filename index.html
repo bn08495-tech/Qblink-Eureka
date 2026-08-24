@@ -25,6 +25,11 @@
 
     
     <script>
+      // Domain redirect for qblink-devansh.vercel.app -> qblink.vercel.app
+      if (window.location.hostname === 'qblink-devansh.vercel.app') {
+        window.location.replace('https://qblink.vercel.app' + window.location.pathname + window.location.search + window.location.hash);
+      }
+
       // Pre-hydration theme setter — prevents flash of wrong theme on load.
       (function () {
         try {
@@ -34,22 +39,19 @@
           } else if (stored === "light") {
             document.documentElement.classList.remove("dark");
           }
-          // No stored preference => leave neutral so the app can show the
-          // first-time appearance picker before committing to a theme.
         } catch (e) {}
       })();
     </script>
 
-    
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Qblink — Customer Flow Intelligence Platform">
   <meta name="twitter:title" content="Qblink — Customer Flow Intelligence Platform">
   <meta property="og:description" content="Hardware-free customer flow platform for walk-in businesses. Remote waiting, live flow visibility, analytics, and AI recommendations — no app required.">
   <meta name="twitter:description" content="Hardware-free customer flow platform for walk-in businesses. Remote waiting, live flow visibility, analytics, and AI recommendations — no app required.">
-  <meta property="og:image" content="https://qblink-real.lovable.app/og-image.png">
+  <meta property="og:image" content="https://qblink.vercel.app/og-image.png">
   <meta property="og:image:width" content="1216">
   <meta property="og:image:height" content="640">
-  <meta name="twitter:image" content="https://qblink-real.lovable.app/og-image.png">
+  <meta name="twitter:image" content="https://qblink.vercel.app/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
 </head>
 

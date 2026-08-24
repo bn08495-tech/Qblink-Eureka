@@ -3,6 +3,19 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "redirects": [
+    {
+      "has": [
+        {
+          "type": "host",
+          "value": "qblink-devansh.vercel.app"
+        }
+      ],
+      "source": "/:path*",
+      "destination": "https://qblink.vercel.app/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

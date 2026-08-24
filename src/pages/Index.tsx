@@ -18,6 +18,8 @@ import DemoVideosSection from "@/components/DemoVideosSection";
 const ChaosToClarityExperience = lazy(() => import("@/features/chaosToClarity/ChaosToClarityExperience"));
 const IndustryMorphingExperience = lazy(() => import("@/features/industryMorphing/IndustryMorphingExperience"));
 
+import { PUBLIC_SITE_URL } from "@/lib/publicUrl";
+
 const faqs = [
   { q: "Do customers need to download an app?", a: "No. Customers simply scan a QR code or open a link in their browser. No app download, no sign-up required." },
   { q: "Do businesses need any special hardware?", a: "Not at all. Qblink runs entirely on the web — any phone, tablet, or computer with a browser works." },
@@ -33,7 +35,7 @@ const faqs = [
   { q: "How do business owners get started?", a: "Sign up for a free account, create your first queue, and share the QR code or link with your customers. That's it — you're live." },
 ];
 
-const SITE_URL = "https://qblink-real.lovable.app";
+const SITE_URL = PUBLIC_SITE_URL;
 
 const jsonLd = [
   {

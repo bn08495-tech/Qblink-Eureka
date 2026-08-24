@@ -7,7 +7,7 @@
  * behind Lovable authentication. A customer scanning that QR would be asked
  * to sign in to Lovable — which must never happen.
  */
-export const PUBLIC_SITE_URL = "https://qblink-real.lovable.app";
+export const PUBLIC_SITE_URL = "https://qblink-devansh.vercel.app";
 
 const PRIVATE_HOST_PATTERNS = [
   "id-preview--",

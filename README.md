@@ -992,7 +992,7 @@ Even someone seeing the site for 5–10 seconds should understand the concept.
 
 This project was built with [Lovable](https://lovable.dev).
 
-**Live app**: https://qblinkk.lovable.app
+**Live app**: https://qblink-devansh.vercel.app
 
 ## Build with Lovable
 

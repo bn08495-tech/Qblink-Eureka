@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
+import { PUBLIC_SITE_URL } from "@/lib/publicUrl";
 
-const BASE = "https://qblink-real.lovable.app";
+const BASE = PUBLIC_SITE_URL;
 
 interface SEOProps {
   title: string;

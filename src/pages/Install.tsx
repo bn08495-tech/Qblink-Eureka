@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Smartphone, Download, Share2, Plus, ArrowLeft } from "lucide-react";
 import logo from "@/assets/qblink-logo.png";
 import SEO from "@/components/SEO";
+import { PUBLIC_SITE_URL } from "@/lib/publicUrl";
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
@@ -35,6 +36,8 @@ const Install = () => {
     setDeferred(null);
   };
 
+  const domainHost = PUBLIC_SITE_URL.replace(/^https?:\/\//, "");
+
   return (
     <div className="min-h-screen soft-bg px-4 py-10 flex flex-col items-center">
       <SEO
@@ -46,8 +49,8 @@ const Install = () => {
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
             itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: "https://qblink-real.lovable.app/" },
-              { "@type": "ListItem", position: 2, name: "Install", item: "https://qblink-real.lovable.app/install" },
+              { "@type": "ListItem", position: 1, name: "Home", item: `${PUBLIC_SITE_URL}/` },
+              { "@type": "ListItem", position: 2, name: "Install", item: `${PUBLIC_SITE_URL}/install` },
             ],
           },
           {
@@ -55,7 +58,7 @@ const Install = () => {
             "@type": "HowTo",
             name: "Install Qblink on your device",
             step: [
-              { "@type": "HowToStep", position: 1, name: "Open Qblink", text: "Visit qblink-real.lovable.app in your browser." },
+              { "@type": "HowToStep", position: 1, name: "Open Qblink", text: `Visit ${domainHost} in your browser.` },
               { "@type": "HowToStep", position: 2, name: "Add to home screen", text: "Tap the browser share menu and choose 'Add to Home Screen' (iOS) or 'Install app' (Android/desktop)." },
               { "@type": "HowToStep", position: 3, name: "Launch", text: "Open Qblink from your home screen for an app-like experience." },
             ],

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Users, Building2, ArrowRight, ShieldCheck } from "lucide-react";
+import { UserButton, SignedIn, SignedOut } from "@clerk/clerk-react";
 import logo from "@/assets/qblink-logo.png";
 import SEO from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,10 +19,20 @@ const RoleSelection = () => {
           <img src={logo} alt="Qblink" className="h-9 w-9 rounded-lg object-contain" />
           <span className="text-xl font-bold text-foreground">Qblink</span>
         </Link>
-        <p className="text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link to="/auth/signin" className="text-primary font-semibold hover:underline">Sign In</Link>
-        </p>
+        <div className="flex items-center gap-4">
+          <SignedOut>
+            <p className="text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link to="/auth/signin" className="text-primary font-semibold hover:underline">Sign In</Link>
+            </p>
+          </SignedOut>
+          <SignedIn>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground hidden sm:inline">{email}</span>
+              <UserButton afterSignOutUrl="/auth" />
+            </div>
+          </SignedIn>
+        </div>
       </header>
 
       <div className="w-full max-w-3xl text-center mb-10">
@@ -63,20 +74,21 @@ const RoleSelection = () => {
 
         <Link
           to="/auth/customer"
-          className="group bg-card rounded-3xl p-8 sm:p-10 card-shadow hover:elevated-shadow transition-all border border-border hover:border-border/80 flex flex-col min-h-[320px] opacity-90 hover:opacity-100"
+          className="group bg-card rounded-3xl p-8 sm:p-10 card-shadow hover:elevated-shadow transition-all border-2 border-border hover:border-primary/60 flex flex-col min-h-[320px] relative overflow-hidden"
         >
-          <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-6 shrink-0">
-            <Users className="w-8 h-8 text-muted-foreground" />
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 shrink-0">
+            <Users className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Customer Profile</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Customer Account</h2>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">
-            <strong>Visiting a venue?</strong> You do <span className="underline font-bold text-foreground">not</span> need to sign up—just scan the QR code at the business!
+            Track your live spot in line, bookmark favorite venues, view appointment history, and receive WhatsApp / email alerts.
           </p>
-          <div className="p-3 rounded-xl bg-muted/40 border border-border/60 text-xs text-muted-foreground mb-6">
-            Sign up here only if you want to bookmark favorite businesses or review your past queue visits.
+          <div className="text-xs font-semibold text-primary mb-4 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-blue-500" />
+            <span>One-Click Google Sign In Available</span>
           </div>
-          <span className="inline-flex items-center gap-2 text-muted-foreground font-semibold text-sm group-hover:gap-3 group-hover:text-foreground transition-all min-h-[44px]">
-            Optional Customer Sign In <ArrowRight className="w-4 h-4" />
+          <span className="inline-flex items-center gap-2 text-primary font-bold text-sm group-hover:gap-3 transition-all min-h-[44px]">
+            Customer Sign In & Sign Up <ArrowRight className="w-4 h-4" />
           </span>
         </Link>
 

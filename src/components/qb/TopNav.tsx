@@ -86,9 +86,11 @@ export const TopNav = () => {
         </div>
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
-          <div className="hidden sm:block">
-            <ThemeToggle />
+          {/* Always accessible ThemeToggle in header */}
+          <div className="flex items-center">
+            <ThemeToggle size="sm" />
           </div>
+
           <Link
             to="/pitch"
             className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg border transition-all ${
@@ -100,6 +102,7 @@ export const TopNav = () => {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>Pitch Demo</span>
           </Link>
+
           <Link
             to="/auth/signin"
             className={`hidden sm:inline-block text-sm px-3 py-2 rounded-lg transition-colors ${
@@ -108,43 +111,97 @@ export const TopNav = () => {
           >
             Sign in
           </Link>
+
           <Link
             to="/auth"
-            className="text-sm font-medium px-4 py-2.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+            className="text-sm font-semibold px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-xs text-center"
           >
             Start free
           </Link>
+
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            className={`md:hidden p-2 rounded-lg ${scrolled ? "text-foreground" : "stage-text"}`}
+            className={`md:hidden p-2 rounded-xl border border-border/60 bg-card/60 backdrop-blur-md transition-colors ${
+              scrolled ? "text-foreground hover:bg-muted" : "stage-text hover:bg-white/10"
+            }`}
           >
             {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </nav>
 
+      {/* Mobile Drawer Dropdown */}
       <div 
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${
-          open ? "max-h-96" : "max-h-0"
-        }`}
+        className={`md:hidden transition-all duration-300 ease-out overflow-y-auto ${
+          open 
+            ? "max-h-[calc(100vh-4.5rem)] opacity-100 shadow-2xl border-b border-border" 
+            : "max-h-0 opacity-0 pointer-events-none border-b-0"
+        } bg-background/98 backdrop-blur-2xl`}
       >
-        <div className="bg-background border-b border-border px-5 pb-5 pt-1 space-y-1">
-          {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
+        <div className="px-5 pt-3 pb-6 space-y-4">
+          {/* Navigation Links */}
+          <div className="grid grid-cols-2 gap-1.5">
+            {links.map((l) => {
+              const id = l.href.replace("#", "");
+              const isActive = activeSection === id;
+              return (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    isActive
+                      ? "bg-primary/10 text-primary font-bold border border-primary/20"
+                      : "text-foreground/80 hover:text-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-primary" : "bg-muted-foreground/40"}`} />
+                  <span>{l.label}</span>
+                </a>
+              );
+            })}
+          </div>
+
+          {/* Quick Utility & Actions Panel */}
+          <div className="pt-3 border-t border-border/80 flex flex-col gap-3">
+            {/* Theme & Appearance Row */}
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-muted/50 border border-border/60">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-foreground">Theme & Appearance</span>
+                <span className="text-[11px] text-muted-foreground">Switch between Light and Dark mode</span>
+              </div>
+              <ThemeToggle size="md" />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <Link
+                to="/pitch"
+                onClick={() => setOpen(false)}
+                className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 transition-all text-center"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Pitch Demo</span>
+              </Link>
+              <Link
+                to="/auth/signin"
+                onClick={() => setOpen(false)}
+                className="inline-flex items-center justify-center py-2.5 px-3 rounded-xl border border-border bg-card text-foreground font-semibold text-xs hover:bg-muted transition-all text-center"
+              >
+                Sign in
+              </Link>
+            </div>
+
+            <Link
+              to="/auth"
               onClick={() => setOpen(false)}
-              className="block py-2.5 text-sm text-foreground"
+              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-xs text-center shadow-md shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all"
             >
-              {l.label}
-            </a>
-          ))}
-          <div className="flex items-center gap-3 pt-3">
-            <ThemeToggle />
-            <Link to="/auth/signin" className="text-sm text-foreground">Sign in</Link>
+              Start Free Pilot (No Credit Card)
+            </Link>
           </div>
         </div>
       </div>

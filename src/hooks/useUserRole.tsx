@@ -80,6 +80,6 @@ export const useUserRole = () => {
     };
   }, [user?.id, user?.email, authLoading]);
 
-  return { role, loading: loading && authLoading };
+  return { role, loading: authLoading || loading };
 };
 

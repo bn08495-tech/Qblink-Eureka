@@ -41,11 +41,8 @@ const BusinessSignUp = () => {
     setOverrides(getIndustryDefaults(category));
   }, [category]);
 
-  useEffect(() => {
-    if (user && !authLoading) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [user, authLoading, navigate]);
+  // Only auto-redirect if the user already completed business setup
+  // (Don't redirect during sign-up itself as it breaks the flow)
 
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -26,12 +26,15 @@ const SignIn = () => {
   const safeNext = nextUrl && nextUrl.startsWith("/") && !nextUrl.startsWith("//") ? nextUrl : null;
   const signupHref = safeNext ? `/auth/customer?next=${encodeURIComponent(safeNext)}` : "/auth";
 
-  // Redirect if already signed in
+  // Redirect if already signed in (simple — post-login routing handles role-aware nav)
   useEffect(() => {
     if (user && !authLoading) {
-      resolveUserDestination(user.id, safeNext, user).then((dest) => {
-        navigate(dest, { replace: true });
-      });
+      const dest = safeNext || (
+        user.email?.toLowerCase() === "qblinktrial@gmail.com" ? "/admin" :
+        user.user_metadata?.role === "business" ? "/dashboard" :
+        "/customer-dashboard"
+      );
+      navigate(dest, { replace: true });
     }
   }, [user, authLoading, navigate, safeNext]);
 

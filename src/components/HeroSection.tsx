@@ -37,11 +37,11 @@ const HeroSection = () => (
           </p>
           <div className="flex flex-wrap gap-4 mb-8">
             <Link
-              to="/auth"
+              to="/auth/business"
               onClick={() => trackEvent("cta_click", { cta: "start_free", location: "hero" })}
               className="border border-primary/30 bg-card text-primary px-8 py-3.5 rounded-full text-sm font-semibold hover:bg-primary/10 transition-colors card-shadow"
             >
-              Start Free
+              Start Free Pilot
             </Link>
             <Link
               to="/onboarding"

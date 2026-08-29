@@ -6,12 +6,14 @@ import { useTheme } from "@/hooks/useTheme";
 import logo from "@/assets/qblink-logo.png";
 
 const BrandMark = ({ className = "w-9 h-9" }: { className?: string }) => (
-  <img
-    src={logo}
-    alt="Qblink"
-    className={`${className} object-contain select-none`}
-    draggable={false}
-  />
+  <div className={`${className} rounded-xl bg-white p-1 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0`}>
+    <img
+      src={logo}
+      alt="Qblink"
+      className="w-full h-full object-contain select-none"
+      draggable={false}
+    />
+  </div>
 );
 
 const acts = [
@@ -138,10 +140,10 @@ export const SideRail = () => {
           </div>
 
           <Link
-            to="/auth"
+            to="/auth/business"
             className="font-mono-caps text-cream/80 hover:text-glow transition-colors [writing-mode:vertical-rl] rotate-180"
           >
-            Start free →
+            Start pilot →
           </Link>
         </div>
       </aside>
@@ -210,11 +212,11 @@ export const SideRail = () => {
                 </div>
               </div>
               <Link
-                to="/auth"
+                to="/auth/business"
                 onClick={() => setOpen(false)}
                 className="mt-4 font-mono-caps text-glow border border-glow/40 px-4 py-3"
               >
-                Start free →
+                Start free pilot →
               </Link>
             </div>
           </nav>

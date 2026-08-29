@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Search, Star, Users, LogOut, MapPin, ArrowLeft, ArrowRight, UtensilsCrossed, X, Clock, Zap, Activity } from "lucide-react";
+import { Search, Star, Users, LogOut, MapPin, ArrowLeft, ArrowRight, UtensilsCrossed, X, Clock, Zap, Activity, Building2 } from "lucide-react";
 import { SkeletonCardGrid, SkeletonStatGrid, SkeletonPageHeader } from "@/components/skeletons/DashboardSkeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 import EmptyState from "@/components/EmptyState";
@@ -71,9 +71,10 @@ const CustomerDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/auth/signin");
-    if (!roleLoading && user && role === "business") navigate("/dashboard");
-  }, [user, role, authLoading, roleLoading, navigate]);
+    if (!authLoading && !user) {
+      navigate("/auth/signin", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -276,7 +277,9 @@ const CustomerDashboard = () => {
       <header className="bg-card/80 backdrop-blur border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <img src={logo} alt="Qblink" className="h-9 w-9 rounded-lg object-contain" />
+            <div className="w-9 h-9 rounded-xl bg-white p-1 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+              <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+            </div>
             <span className="font-bold text-foreground hidden sm:block">Qblink</span>
           </Link>
           <div className="flex-1 max-w-xl relative">
@@ -289,6 +292,15 @@ const CustomerDashboard = () => {
             />
           </div>
           <NotificationBell />
+          {(role === "business" || role === "admin") && (
+            <Link
+              to="/dashboard"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Business Portal</span>
+            </Link>
+          )}
           <div className="hidden sm:flex items-center gap-2">
             <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center text-primary-foreground text-xs font-bold">
               {profileName?.[0]?.toUpperCase() || "C"}

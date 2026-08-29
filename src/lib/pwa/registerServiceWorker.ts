@@ -1,16 +1,10 @@
 /**
  * Single, guarded entry point for service-worker registration.
  *
- * See docs/caching-strategy.md for the full rationale and the checklist to
- * follow before changing guards, the kill switch, or recovery behaviour.
- *
  * Goals:
- *  - Never register in dev, in an iframe, or on any Lovable preview host
- *    (a stale SW there is what makes the editor show "Project not found"
- *    or a blank/outdated page after a deploy).
- *  - Always clean up any SW that already exists in those contexts.
+ *  - Never register in dev, in an iframe, or in local preview environments.
  *  - Support a `?sw=off` kill switch that unregisters and clears caches.
- *  - Never serve stale HTML: navigations are NetworkFirst (see vite.config).
+ *  - Never serve stale HTML: navigations are NetworkFirst.
  *  - Recover automatically when a deploy removes hashed chunks the old
  *    page still references.
  */
@@ -21,10 +15,6 @@ const RELOAD_FLAG = "qb:sw-reloaded";
 const isPreviewContext = (): boolean => {
   const host = window.location.hostname;
   if (host === "localhost" || host === "127.0.0.1") return true;
-  if (host.startsWith("id-preview--") || host.startsWith("preview--")) return true;
-  if (host === "lovableproject.com" || host.endsWith(".lovableproject.com")) return true;
-  if (host === "lovableproject-dev.com" || host.endsWith(".lovableproject-dev.com")) return true;
-  if (host === "beta.lovable.dev" || host.endsWith(".beta.lovable.dev")) return true;
   try {
     if (window.self !== window.top) return true;
   } catch {

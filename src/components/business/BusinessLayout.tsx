@@ -40,34 +40,55 @@ interface Props {
 
 const BusinessLayout = ({ children }: Props) => {
   const { user, loading: authLoading, signOut } = useAuth();
-  const { role, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const location = useLocation();
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/auth/signin");
-    if (!roleLoading && user && role === "customer") navigate("/customer-dashboard");
-  }, [user, role, authLoading, roleLoading, navigate]);
+    if (!authLoading && !user) {
+      navigate("/auth/signin", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (user) {
-      supabase.from("businesses").select("*").eq("owner_id", user.id).limit(1).maybeSingle()
+      supabase
+        .from("businesses")
+        .select("*")
+        .eq("owner_id", user.id)
+        .limit(1)
+        .maybeSingle()
         .then(({ data }) => {
           setBusiness(data as Business);
           setLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error fetching business:", err);
+          setLoading(false);
         });
+    } else if (!authLoading) {
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   if (authLoading || loading) return <SkeletonAppShell />;
 
   if (!business) return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 text-center">
-      <div>
-        <p className="text-muted-foreground mb-4">No business found for your account.</p>
-        <Link to="/auth/business" className="text-primary font-semibold hover:underline">Register a business</Link>
+      <div className="bg-card rounded-2xl p-8 card-shadow max-w-md border border-border">
+        <p className="text-foreground font-bold text-lg mb-2">No Business Found</p>
+        <p className="text-muted-foreground text-sm mb-6">
+          This account does not have a registered business counter yet.
+        </p>
+        <div className="flex flex-col gap-2.5">
+          <Link to="/auth/business" className="gradient-bg text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity">
+            Register Your Business
+          </Link>
+          <Link to="/customer-dashboard" className="border border-border text-foreground px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-muted transition-colors">
+            Go to Customer Dashboard
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -82,7 +103,9 @@ const BusinessLayout = ({ children }: Props) => {
       {/* Sidebar */}
       <aside className="hidden md:flex w-64 flex-col bg-card border-r border-border p-4">
         <Link to="/" className="flex items-center gap-2 mb-6 px-2">
-          <img src={logo} alt="Qblink" className="h-9 w-9 rounded-lg object-contain" />
+          <div className="w-8 h-8 rounded-lg bg-white p-1 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+            <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+          </div>
           <span className="font-bold text-foreground">Qblink</span>
         </Link>
 
@@ -124,7 +147,9 @@ const BusinessLayout = ({ children }: Props) => {
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card border-b border-border">
         <div className="flex items-center justify-between px-4 h-14">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Qblink" className="h-9 w-9 rounded-lg object-contain" />
+            <div className="w-7 h-7 rounded-lg bg-white p-0.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+              <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+            </div>
             <span className="font-bold text-foreground text-sm">{business.name}</span>
           </Link>
           <button onClick={signOut}><LogOut className="w-4 h-4 text-muted-foreground" /></button>

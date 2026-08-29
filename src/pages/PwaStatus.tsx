@@ -79,7 +79,9 @@ const PwaStatus = () => {
       />
       <div className="max-w-lg mx-auto space-y-5">
         <div className="flex items-center gap-3 mb-2">
-          <img src={logo} alt="Qblink" className="w-10 h-10 object-contain" />
+          <div className="w-10 h-10 rounded-xl bg-white p-1 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+            <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+          </div>
           <div>
             <h1 className="text-xl font-bold text-foreground">PWA Status</h1>
             <p className="text-xs text-muted-foreground">Manifest, service worker & installability</p>

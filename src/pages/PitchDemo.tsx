@@ -166,7 +166,9 @@ export const PitchDemo: React.FC = () => {
             </Link>
             <div className="h-4 w-[1px] bg-slate-800 hidden sm:block" />
             <div className="flex items-center gap-2">
-              <img src={logo} alt="Qblink" className="w-6 h-6 object-contain ring-1 ring-primary/30 rounded-md" />
+              <div className="w-6 h-6 rounded-md bg-white p-0.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+                <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+              </div>
               <span className="font-display font-extrabold text-sm tracking-tight text-white">
                 Live Pitch Simulator
               </span>
@@ -254,6 +256,14 @@ export const PitchDemo: React.FC = () => {
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset</span>
             </button>
+
+            <Link
+              to="/auth/business"
+              className="hidden sm:inline-flex px-3.5 py-1.5 rounded-xl text-xs font-bold bg-primary text-white hover:opacity-90 shadow-md transition-all items-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Start Free Pilot</span>
+            </Link>
           </div>
         </div>
       </header>

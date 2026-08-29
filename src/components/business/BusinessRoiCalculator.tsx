@@ -412,7 +412,7 @@ Potential Monthly Retained ${preset.visitorTerm}: ${outputs.monthlyCustomersReta
               </button>
 
               <Link
-                to="/auth"
+                to="/auth/business"
                 className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground hover:opacity-95 font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-primary/20 transition-all text-center"
               >
                 <span>Start Free Pilot</span>

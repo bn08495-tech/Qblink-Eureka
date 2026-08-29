@@ -82,7 +82,9 @@ const Onboarding = () => {
 
       <header className="relative z-10 flex items-center justify-between px-4 sm:px-6 pt-5 pb-2 max-w-3xl mx-auto w-full">
         <Link to="/" className="flex items-center gap-2" aria-label="Back to Qblink home">
-          <img src={logo} alt="Qblink" className="h-9 w-9 rounded-lg object-contain" />
+          <div className="w-9 h-9 rounded-xl bg-white p-1 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+            <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+          </div>
           <span className="font-bold text-foreground">Qblink</span>
         </Link>
         {stepIdx > 0 && step !== "outro" && (
@@ -147,10 +149,10 @@ const Onboarding = () => {
                   className="flex flex-wrap justify-center gap-3"
                 >
                   <Link
-                    to="/auth"
+                    to="/auth/business"
                     className="gradient-bg text-primary-foreground px-8 py-3 rounded-full text-sm font-semibold hover:opacity-90 hover:scale-[1.03] transition-all elevated-shadow"
                   >
-                    Start Free
+                    Start Free Pilot
                   </Link>
                   <Link
                     to="/"

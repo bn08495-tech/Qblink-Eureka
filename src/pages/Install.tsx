@@ -69,7 +69,9 @@ const Install = () => {
         <ArrowLeft className="w-4 h-4" /> Back
       </Link>
       <div className="max-w-md w-full bg-card rounded-3xl card-shadow p-7 text-center">
-        <img src={logo} alt="Qblink" className="w-16 h-16 rounded-2xl mx-auto mb-4" />
+        <div className="w-16 h-16 rounded-2xl bg-white p-2 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0 mx-auto mb-4">
+          <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+        </div>
         <h1 className="text-2xl font-bold text-foreground mb-2">Install Qblink</h1>
         <p className="text-sm text-muted-foreground mb-6">
           Get the app-like experience: faster launch, full screen, and instant access from your home screen.

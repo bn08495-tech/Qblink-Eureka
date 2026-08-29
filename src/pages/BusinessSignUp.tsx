@@ -3,12 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { Mail, Lock, Building2, Tag, FileText, MapPin, ArrowLeft, Sparkles, Check, Clock, BellRing, Users } from "lucide-react";
+import { Mail, Lock, Building2, Tag, FileText, MapPin, ArrowLeft, Sparkles, Check, Clock, BellRing, Users, Loader2 } from "lucide-react";
 import logo from "@/assets/qblink-logo.png";
 import SEO from "@/components/SEO";
-import { GoogleButton, AuthDivider } from "@/components/auth/GooglePickerModal";
-import { useSignIn, useSignUp } from "@clerk/clerk-react";
-import { prepareGoogleAuth, ensureRoleAndProfile } from "@/lib/auth/authService";
 import { INDUSTRIES, getIndustryDefaults, type IndustryDefaults } from "@/lib/industryDefaults";
 
 const ALERT_LABELS: Record<string, string> = {
@@ -34,11 +31,8 @@ const BusinessSignUp = () => {
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
-  const [googleBusy, setGoogleBusy] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { signIn } = useSignIn();
-  const { signUp } = useSignUp();
+  const { user, loading: authLoading, setSessionState } = useAuth();
   const defaults = getIndustryDefaults(category);
   const [overrides, setOverrides] = useState<IndustryDefaults>(defaults);
 
@@ -48,8 +42,10 @@ const BusinessSignUp = () => {
   }, [category]);
 
   useEffect(() => {
-    if (user) navigate("/dashboard");
-  }, [user, navigate]);
+    if (user && !authLoading) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,97 +59,73 @@ const BusinessSignUp = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    const cleanEmail = email.trim().toLowerCase();
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: cleanEmail,
         password,
-        options: { emailRedirectTo: window.location.origin },
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: {
+            business_name: businessName.trim(),
+            role: "business",
+          },
+        },
       });
+
       if (error) throw error;
 
       if (data.user) {
-        await supabase.from("user_roles").insert({ user_id: data.user.id, role: "business" });
-        await supabase.from("businesses").insert({
-          owner_id: data.user.id,
-          name: businessName,
+        const userId = data.user.id;
+
+        // 1. Assign role
+        const { error: roleErr } = await supabase
+          .from("user_roles")
+          .upsert({ user_id: userId, role: "business" }, { onConflict: "user_id" });
+        if (roleErr) console.error("Error setting business role:", roleErr);
+
+        // 2. Create business entry
+        const { error: bizErr } = await supabase.from("businesses").insert({
+          owner_id: userId,
+          name: businessName.trim(),
           category,
-          description: description || null,
-          address: address || null,
+          description: description.trim() || null,
+          address: address.trim() || null,
           default_settings: overrides as any,
         });
-      }
+        if (bizErr) console.error("Error creating business:", bizErr);
 
-      toast.success(`Business account created — ${category} defaults enabled`);
+        toast.success(`Business account created — ${category} defaults enabled!`);
+
+        // If session exists
+        if (data.session) {
+          setSessionState(data.session);
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
+        // Try immediate sign in
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password,
+        });
+
+        if (!signInErr && signInData.session) {
+          setSessionState(signInData.session);
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
+        toast.info("Account created! Please check your email to confirm your account.");
+        navigate("/auth/signin");
+      }
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
+      toast.error(err.message || "Something went wrong creating your business account.");
     } finally {
       setLoading(false);
     }
   };
-
-  const continueWithGoogle = async () => {
-    if (!businessName.trim()) {
-      toast.error("Enter your business name before continuing with Google.");
-      setStep(1);
-      return;
-    }
-    setGoogleBusy(true);
-    try {
-      // Stash the draft so it can be created once a real session exists.
-      sessionStorage.setItem(
-        "qblink.pendingBusiness",
-        JSON.stringify({ name: businessName, category, description, address, default_settings: overrides }),
-      );
-      prepareGoogleAuth("business");
-      const redirectUrlComplete = "/dashboard";
-      if (signUp) {
-        await signUp.authenticateWithRedirect({
-          strategy: "oauth_google",
-          redirectUrl: "/sso-callback",
-          redirectUrlComplete,
-        });
-      } else if (signIn) {
-        await signIn.authenticateWithRedirect({
-          strategy: "oauth_google",
-          redirectUrl: "/sso-callback",
-          redirectUrlComplete,
-        });
-      }
-    } catch (err: any) {
-      toast.error(err?.message ?? "Couldn't sign in with Google");
-    } finally {
-      setGoogleBusy(false);
-    }
-  };
-
-  /** Creates the stashed business draft for the signed-in owner, if any. */
-  const createPendingBusiness = async () => {
-    const raw = sessionStorage.getItem("qblink.pendingBusiness");
-    if (!raw) return;
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) return;
-    const draft = JSON.parse(raw);
-    const { data: existing } = await supabase
-      .from("businesses").select("id").eq("owner_id", data.user.id).limit(1);
-    if (!existing || existing.length === 0) {
-      await supabase.from("businesses").insert({
-        owner_id: data.user.id,
-        name: draft.name,
-        category: draft.category,
-        description: draft.description || null,
-        address: draft.address || null,
-        default_settings: draft.default_settings as any,
-      });
-    }
-    sessionStorage.removeItem("qblink.pendingBusiness");
-    toast.success("Business account ready");
-  };
-
-  // Finish the Google flow when the browser returns from the provider.
-  useEffect(() => {
-    if (user) { createPendingBusiness().catch(() => {}); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
   return (
     <div className="min-h-screen soft-bg flex items-center justify-center px-4 py-10">
@@ -168,9 +140,11 @@ const BusinessSignUp = () => {
         </button>
 
         <div className="text-center mb-8">
-          <img src={logo} alt="Qblink" className="h-10 w-10 rounded-lg object-contain mx-auto mb-3" />
+          <div className="w-10 h-10 rounded-xl bg-white p-1.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0 mx-auto mb-3">
+            <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+          </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">
-            {step === 1 ? "Register Your Business" : "Choose Sign Up Method"}
+            {step === 1 ? "Register Your Business" : "Create Business Account"}
           </h1>
           <p className="text-sm text-muted-foreground">
             {step === 1 ? "Enter your business name to get started" : `Setting up ${businessName}`}
@@ -208,7 +182,7 @@ const BusinessSignUp = () => {
             </p>
           </form>
         ) : (
-          /* STEP 2: GOOGLE AUTH OR EMAIL FORM SCREEN */
+          /* STEP 2: BUSINESS DETAILS FORM SCREEN */
           <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-6 sm:p-8 card-shadow space-y-4 animate-in fade-in slide-in-from-right-2 duration-300">
             <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
@@ -223,15 +197,6 @@ const BusinessSignUp = () => {
                 Edit
               </button>
             </div>
-
-            <div className="pt-2">
-              <GoogleButton onClick={continueWithGoogle} loading={googleBusy} label="Continue with Google" />
-              <p className="text-xs text-center text-muted-foreground mt-2">
-                <span className="font-semibold text-primary">Recommended</span> · Instant setup with Google
-              </p>
-            </div>
-
-            <AuthDivider label="or sign up with email" />
 
             <Field icon={<Mail className="w-4 h-4" />} label="Business Email">
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="business@email.com"
@@ -353,7 +318,7 @@ const BusinessSignUp = () => {
 
             <button type="submit" disabled={loading}
               className="w-full gradient-bg text-primary-foreground py-3.5 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-              {loading ? "Creating..." : "Create Business Account"}
+              {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating...</> : "Create Business Account"}
             </button>
 
             <p className="text-center text-sm text-muted-foreground">

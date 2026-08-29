@@ -131,7 +131,9 @@ export const PrintReadyQRKit = ({
             {/* Top Brand Header */}
             <div className="w-full flex items-center justify-between border-b border-border/50 pb-4 mb-4">
               <div className="flex items-center gap-2">
-                <img src={logo} alt="Qblink" className="w-7 h-7 rounded-lg object-contain" />
+                <div className="w-7 h-7 rounded-lg bg-white p-0.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+                  <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+                </div>
                 <span className="font-extrabold text-foreground tracking-tight text-sm">Qblink</span>
               </div>
               <span className="text-[10px] font-bold tracking-widest text-primary uppercase bg-primary/10 px-2.5 py-1 rounded-full">

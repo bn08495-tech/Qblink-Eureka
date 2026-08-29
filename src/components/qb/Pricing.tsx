@@ -21,8 +21,8 @@ export const PLANS: PlanDef[] = [
     cadence: "forever",
     line: "For a single counter finding its rhythm.",
     features: ["1 queue", "Up to 50 customers / day", "QR + link join", "Live position for customers", "Basic daily summary"],
-    cta: "Start free",
-    to: "/auth",
+    cta: "Start Free Pilot",
+    to: "/auth/business",
   },
   {
     id: "starter",
@@ -32,7 +32,7 @@ export const PLANS: PlanDef[] = [
     line: "For a busy front desk that can't keep answering \"how long?\".",
     features: ["3 queues / counters", "Unlimited customers", "No-show & arrival window control", "7-day analytics history", "Public display screen"],
     cta: "Start Starter",
-    to: "/auth",
+    to: "/auth/business",
   },
   {
     id: "growth",
@@ -42,7 +42,7 @@ export const PLANS: PlanDef[] = [
     line: "For multi-counter operations that run on numbers.",
     features: ["Unlimited queues & counters", "Staff accounts & permissions", "Full analytics + peak-hour intelligence", "Restaurant seating & party routing", "AI recommendations", "Priority support"],
     cta: "Start Growth",
-    to: "/auth",
+    to: "/auth/business",
     featured: true,
   },
   {
@@ -53,7 +53,7 @@ export const PLANS: PlanDef[] = [
     line: "For chains, hospital groups and multi-location networks.",
     features: ["Multi-location rollout", "SSO & advanced roles", "API access & integrations", "Custom SLAs", "Dedicated onboarding"],
     cta: "Book a demo",
-    to: "/#contact",
+    to: "#contact",
   },
 ];
 
@@ -103,16 +103,29 @@ export const Pricing = () => (
             </ul>
 
             <div className="border-t border-border mt-6" />
-            <Link
-              to={p.to}
-              className={`mt-7 inline-flex justify-center rounded-xl px-4 py-3 text-sm font-medium transition-opacity ${
-                p.featured
-                  ? "bg-primary text-primary-foreground hover:opacity-90"
-                  : "border border-border text-foreground hover:bg-muted"
-              }`}
-            >
-              {p.cta}
-            </Link>
+            {p.to.startsWith("#") ? (
+              <a
+                href={p.to}
+                className={`mt-7 inline-flex justify-center rounded-xl px-4 py-3 text-sm font-medium transition-opacity ${
+                  p.featured
+                    ? "bg-primary text-primary-foreground hover:opacity-90"
+                    : "border border-border text-foreground hover:bg-muted"
+                }`}
+              >
+                {p.cta}
+              </a>
+            ) : (
+              <Link
+                to={p.to}
+                className={`mt-7 inline-flex justify-center rounded-xl px-4 py-3 text-sm font-medium transition-opacity ${
+                  p.featured
+                    ? "bg-primary text-primary-foreground hover:opacity-90"
+                    : "border border-border text-foreground hover:bg-muted"
+                }`}
+              >
+                {p.cta}
+              </Link>
+            )}
           </div>
         ))}
       </div>

@@ -27,7 +27,9 @@ export const IndustryMorphPage: React.FC = () => {
             </Link>
             <div className="h-4 w-[1px] bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
-              <img src={logo} alt="Qblink" className="w-6 h-6 object-contain" />
+              <div className="w-6 h-6 rounded-md bg-white p-0.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+                <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+              </div>
               <span className="font-display font-extrabold text-sm tracking-tight">
                 Industry Flow Morphing
               </span>

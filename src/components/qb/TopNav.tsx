@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, X, LayoutDashboard, LogOut } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import logo from "@/assets/qblink-logo.png";
 
 const links = [
@@ -23,6 +26,12 @@ export const TopNav = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("product");
+  const { user, signOut } = useAuth();
+  const { role } = useUserRole();
+  const { isAdmin } = useIsAdmin();
+  const navigate = useNavigate();
+
+  const dashboardUrl = isAdmin ? "/admin" : role === "business" ? "/dashboard" : "/customer-dashboard";
 
   useEffect(() => {
     const onScroll = () => {
@@ -54,7 +63,9 @@ export const TopNav = () => {
     >
       <nav className="max-w-7xl mx-auto px-5 sm:px-8 h-[4.5rem] flex items-center gap-8" aria-label="Primary">
         <Link to="/" className="flex items-center gap-2.5 shrink-0" aria-label="Qblink home">
-          <img src={logo} alt="" className="w-8 h-8 object-contain ring-1 ring-primary/20 rounded-lg" draggable={false} />
+          <div className="w-8 h-8 rounded-lg bg-white p-1 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+            <img src={logo} alt="Qblink logo" className="w-full h-full object-contain" draggable={false} />
+          </div>
           <span className={`font-display text-lg tracking-tight font-extrabold ${scrolled ? "text-foreground" : "stage-text"}`}>
             Qblink
           </span>
@@ -103,21 +114,43 @@ export const TopNav = () => {
             <span>Pitch Demo</span>
           </Link>
 
-          <Link
-            to="/auth/signin"
-            className={`hidden sm:inline-block text-sm px-3 py-2 rounded-lg transition-colors ${
-              scrolled ? "text-foreground hover:bg-muted" : "stage-text hover:bg-[hsl(var(--brand-cream)/0.1)]"
-            }`}
-          >
-            Sign in
-          </Link>
+          {user ? (
+            <div className="hidden sm:flex items-center gap-2">
+              <Link
+                to={dashboardUrl}
+                className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-xs"
+              >
+                <LayoutDashboard className="w-3.5 h-3.5" /> Dashboard
+              </Link>
+              <button
+                onClick={() => signOut()}
+                className={`p-2 rounded-lg transition-colors ${
+                  scrolled ? "text-muted-foreground hover:text-destructive hover:bg-muted" : "stage-muted hover:text-red-400 hover:bg-white/10"
+                }`}
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link
+                to="/auth/signin"
+                className={`hidden sm:inline-block text-sm px-3 py-2 rounded-lg transition-colors ${
+                  scrolled ? "text-foreground hover:bg-muted" : "stage-text hover:bg-[hsl(var(--brand-cream)/0.1)]"
+                }`}
+              >
+                Sign in
+              </Link>
 
-          <Link
-            to="/auth"
-            className="text-sm font-semibold px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-xs text-center"
-          >
-            Start free
-          </Link>
+              <Link
+                to="/auth/business"
+                className="text-sm font-semibold px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-xs text-center"
+              >
+                Start free pilot
+              </Link>
+            </>
+          )}
 
           <button
             type="button"
@@ -177,31 +210,54 @@ export const TopNav = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <Link
-                to="/pitch"
-                onClick={() => setOpen(false)}
-                className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 transition-all text-center"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Pitch Demo</span>
-              </Link>
-              <Link
-                to="/auth/signin"
-                onClick={() => setOpen(false)}
-                className="inline-flex items-center justify-center py-2.5 px-3 rounded-xl border border-border bg-card text-foreground font-semibold text-xs hover:bg-muted transition-all text-center"
-              >
-                Sign in
-              </Link>
-            </div>
+            {user ? (
+              <div className="flex flex-col gap-2 pt-1">
+                <Link
+                  to={dashboardUrl}
+                  onClick={() => setOpen(false)}
+                  className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-xs text-center shadow-md shadow-primary/20 hover:brightness-110 flex items-center justify-center gap-2"
+                >
+                  <LayoutDashboard className="w-4 h-4" /> Go to Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    signOut();
+                  }}
+                  className="w-full py-2.5 rounded-xl border border-border bg-card text-muted-foreground hover:text-destructive font-semibold text-xs text-center flex items-center justify-center gap-1.5"
+                >
+                  <LogOut className="w-3.5 h-3.5" /> Sign Out
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Link
+                    to="/pitch"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-primary/30 bg-primary/10 text-primary font-bold text-xs hover:bg-primary/20 transition-all text-center"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Pitch Demo</span>
+                  </Link>
+                  <Link
+                    to="/auth/signin"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex items-center justify-center py-2.5 px-3 rounded-xl border border-border bg-card text-foreground font-semibold text-xs hover:bg-muted transition-all text-center"
+                  >
+                    Sign in
+                  </Link>
+                </div>
 
-            <Link
-              to="/auth"
-              onClick={() => setOpen(false)}
-              className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-xs text-center shadow-md shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all"
-            >
-              Start Free Pilot (No Credit Card)
-            </Link>
+                <Link
+                  to="/auth/business"
+                  onClick={() => setOpen(false)}
+                  className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-xs text-center shadow-md shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all"
+                >
+                  Start Free Pilot (No Credit Card)
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

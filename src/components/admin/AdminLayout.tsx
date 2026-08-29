@@ -79,7 +79,9 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-64 flex-col bg-card border-r border-border p-4 sticky top-0 h-screen">
         <Link to="/" className="flex items-center gap-2 mb-6 px-2">
-          <img src={logo} alt="Qblink" className="h-9 w-9 rounded-lg object-contain" />
+          <div className="w-8 h-8 rounded-lg bg-white p-1 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+            <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+          </div>
           <span className="font-bold text-foreground">Qblink</span>
           <span className="ml-auto text-[10px] uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Admin</span>
         </Link>
@@ -107,7 +109,9 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card border-b border-border">
         <div className="flex items-center justify-between px-4 h-14">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="Qblink" className="h-9 w-9 rounded-lg object-contain" />
+            <div className="w-7 h-7 rounded-lg bg-white p-0.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+              <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+            </div>
             <span className="font-bold text-foreground text-sm">Qblink Admin</span>
           </Link>
           <button onClick={() => setMobileOpen(o => !o)} className="p-2 rounded-lg hover:bg-muted">

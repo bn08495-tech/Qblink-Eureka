@@ -41,7 +41,7 @@ export const Signature = () => (
         </p>
         <div className="mt-10 flex flex-wrap gap-4 justify-center">
           <Link
-            to="/auth"
+            to="/auth/business"
             className="bg-glow text-ink font-mono-caps px-6 py-4 hover:bg-cream transition-colors"
           >
             Start the pilot →
@@ -85,7 +85,7 @@ export const Signature = () => (
         <div>
           <div className="font-mono-caps text-cream/30 mb-3 text-xs">Get started</div>
           <div className="space-y-2">
-            <Link to="/auth" className="block text-cream/60 hover:text-glow transition-colors">Sign up free</Link>
+            <Link to="/auth/business" className="block text-cream/60 hover:text-glow transition-colors">Start Free Pilot</Link>
             <Link to="/auth/signin" className="block text-cream/60 hover:text-glow transition-colors">Sign in</Link>
             <Link to="/onboarding" className="block text-cream/60 hover:text-glow transition-colors">See demo</Link>
           </div>
@@ -103,7 +103,7 @@ export const Signature = () => (
         <div className="flex gap-6">
           <Link to="/affiliate" className="hover:text-glow">Affiliate</Link>
           <a href="mailto:teamqblink@gmail.com" className="hover:text-glow">Contact</a>
-          <Link to="/auth" className="hover:text-glow">Sign in</Link>
+          <Link to="/auth/signin" className="hover:text-glow">Sign in</Link>
         </div>
         <span className="text-cream/30">Hardware-free by conviction.</span>
       </div>

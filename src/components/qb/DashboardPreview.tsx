@@ -241,7 +241,7 @@ export const DashboardPreview = () => {
         <div className="mt-10">
           <motion.div whileHover={{ x: 3 }}>
             <Link
-              to="/auth"
+              to="/auth/business"
               className="group inline-flex items-center gap-2 text-sm stage-accent hover:brightness-125 transition font-semibold"
             >
               Launch your own live operator counter

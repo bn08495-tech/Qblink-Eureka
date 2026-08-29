@@ -107,12 +107,10 @@ finds — when any of these hold:
 - `!import.meta.env.PROD`
 - the page is inside an iframe
 - hostname is `localhost` / `127.0.0.1`
-- hostname starts with `id-preview--` or `preview--`
-- hostname is or ends with `lovableproject.com`, `lovableproject-dev.com`, `beta.lovable.dev`
 - the URL carries `?sw=off`
 
-A SW in the Lovable editor preview holds onto HTML the editor has already replaced,
-which is what produces stale previews and phantom "Project not found" screens.
+A SW in preview holds onto HTML that has already changed,
+which produces stale previews.
 Offline behaviour therefore only exists on the published domain — say so rather than
 enabling the SW in preview to demo it.
 
@@ -128,7 +126,7 @@ on the new build. The SW also re-checks for updates on window focus and every 15
 2. Build and open `/cache-diagnostics` on the published domain: confirm the SW script
    URL and state, and that the `html` cache is not serving your current document while
    `/assets/*` hashed files are present.
-3. If a user reports a stuck page, send them `https://qblinkk.lovable.app/?sw=off`.
+3. If a user reports a stuck page, send them `https://qblink.vercel.app/?sw=off`.
 
 ## Checklist before editing caching code
 

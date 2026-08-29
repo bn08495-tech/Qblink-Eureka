@@ -61,7 +61,9 @@ const PickupTrack = () => {
   return (
     <div className="min-h-screen soft-bg">
       <header className="bg-card border-b border-border px-4 py-4 flex items-center gap-3">
-        <img src={logo} alt="Qblink" className="h-9 w-9 rounded-lg object-contain" />
+        <div className="w-9 h-9 rounded-xl bg-white p-1 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+          <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+        </div>
         <div>
           <p className="font-bold text-foreground">{businessName}</p>
           <p className="text-xs text-muted-foreground">Pickup order · {order.token}</p>

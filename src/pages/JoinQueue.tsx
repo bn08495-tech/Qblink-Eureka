@@ -725,7 +725,9 @@ const JoinQueue = () => {
   if (!queue) return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="text-center">
-        <img src={logo} alt="Qblink" className="h-12 w-12 rounded-lg object-contain mx-auto mb-4" />
+        <div className="w-12 h-12 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0 mx-auto mb-4">
+          <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+        </div>
         <h1 className="text-xl font-bold text-foreground mb-2">Queue not found</h1>
         <p className="text-muted-foreground text-sm">This queue may have been closed or the link is invalid.</p>
       </div>
@@ -735,7 +737,9 @@ const JoinQueue = () => {
   if (queue.status !== "active" && !joined) return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="text-center">
-        <img src={logo} alt="Qblink" className="h-12 w-12 rounded-lg object-contain mx-auto mb-4" />
+        <div className="w-12 h-12 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0 mx-auto mb-4">
+          <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+        </div>
         <h1 className="text-xl font-bold text-foreground mb-2">
           {queue.status === "closed" ? "Queue Closed" : "Queue Paused"}
         </h1>
@@ -828,7 +832,9 @@ const JoinQueue = () => {
         </AlertDialog>
 
         <div className="text-center mb-6">
-          <img src={logo} alt="Qblink" className="h-10 w-10 rounded-lg object-contain mx-auto mb-3" />
+          <div className="w-10 h-10 rounded-xl bg-white p-1.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0 mx-auto mb-3">
+            <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+          </div>
           <DynamicWelcomeHeader
             name={visitorName}
             ahead={joined ? derived().ahead : null}

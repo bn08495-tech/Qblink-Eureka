@@ -111,7 +111,9 @@ const InstallAppPrompt = () => {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <img src={logo} alt="Qblink" className="w-12 h-12 rounded-2xl object-contain" />
+                <div className="w-12 h-12 rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+                  <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+                </div>
                 <div>
                   <h2 className="text-lg font-bold text-foreground">Install Qblink</h2>
                   <p className="text-xs text-muted-foreground">Add to your Home Screen</p>

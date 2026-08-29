@@ -7,9 +7,6 @@ import { User, Lock, Phone, Mail, ArrowLeft, AlertCircle, Loader2 } from "lucide
 import logo from "@/assets/qblink-logo.png";
 import SEO from "@/components/SEO";
 import { COUNTRY_CODES, normalizePhone, phoneToEmail, isValidPhone } from "@/lib/phoneAuth";
-import { GoogleButton, AuthDivider } from "@/components/auth/GooglePickerModal";
-import { useSignIn, useSignUp } from "@clerk/clerk-react";
-import { prepareGoogleAuth } from "@/lib/auth/authService";
 
 const CustomerSignUp = () => {
   const [mode, setMode] = useState<"phone" | "email">("phone");
@@ -20,61 +17,44 @@ const CustomerSignUp = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [googleBusy, setGoogleBusy] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
-  const { signIn } = useSignIn();
-  const { signUp } = useSignUp();
+  const { user, loading: authLoading, setSessionState } = useAuth();
 
   const nextUrl = searchParams.get("next");
   const safeNext = nextUrl && nextUrl.startsWith("/") && !nextUrl.startsWith("//") ? nextUrl : null;
 
   useEffect(() => {
-    if (user) navigate(safeNext || "/customer-dashboard");
-  }, [user, navigate, safeNext]);
+    if (user && !authLoading) {
+      navigate(safeNext || "/customer-dashboard", { replace: true });
+    }
+  }, [user, authLoading, navigate, safeNext]);
 
   const fullDigits = normalizePhone(countryCode, phone);
-
-  const handleGoogle = async () => {
-    setGoogleBusy(true);
-    setFormError(null);
-    try {
-      prepareGoogleAuth("customer", safeNext ?? undefined);
-      const redirectUrlComplete = safeNext || "/customer-dashboard";
-      if (signUp) {
-        await signUp.authenticateWithRedirect({
-          strategy: "oauth_google",
-          redirectUrl: "/sso-callback",
-          redirectUrlComplete,
-        });
-      } else if (signIn) {
-        await signIn.authenticateWithRedirect({
-          strategy: "oauth_google",
-          redirectUrl: "/sso-callback",
-          redirectUrlComplete,
-        });
-      }
-    } catch (err: any) {
-      const msg = err?.message ?? "Couldn't sign in with Google";
-      setFormError(msg);
-      toast.error(msg);
-    } finally {
-      setGoogleBusy(false);
-    }
-  };
 
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
-    if (!fullName.trim()) { setFormError("Please enter your full name."); return; }
-    if (password.length < 6) { setFormError("Password must be at least 6 characters."); return; }
+    if (!fullName.trim()) {
+      setFormError("Please enter your full name.");
+      return;
+    }
+    if (password.length < 6) {
+      setFormError("Password must be at least 6 characters.");
+      return;
+    }
     if (mode === "phone") {
-      if (!isValidPhone(phone)) { setFormError("Enter a valid WhatsApp number (at least 7 digits)."); return; }
+      if (!isValidPhone(phone)) {
+        setFormError("Enter a valid WhatsApp number (at least 7 digits).");
+        return;
+      }
       createAccount(phoneToEmail(fullDigits), `+${fullDigits}`);
     } else {
       const em = email.trim().toLowerCase();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { setFormError("Enter a valid email address."); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+        setFormError("Enter a valid email address.");
+        return;
+      }
       createAccount(em, null);
     }
   };
@@ -87,21 +67,62 @@ const CustomerSignUp = () => {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/customer-dashboard`,
-          data: { full_name: fullName, role: "customer", ...(phoneNumber ? { phone: phoneNumber } : {}) },
+          data: {
+            full_name: fullName.trim(),
+            role: "customer",
+            ...(phoneNumber ? { phone: phoneNumber } : {}),
+          },
         },
       });
+
       if (error) throw error;
+
       if (data.user) {
+        const userId = data.user.id;
+        // Insert role
         const { error: roleErr } = await supabase
           .from("user_roles")
-          .insert({ user_id: data.user.id, role: "customer" });
-        if (roleErr && !roleErr.message.includes("duplicate")) throw roleErr;
+          .upsert({ user_id: userId, role: "customer" }, { onConflict: "user_id" });
+        if (roleErr) console.error("Error creating user role:", roleErr);
+
+        // Insert customer profile
         const { error: profErr } = await supabase
           .from("customer_profiles")
-          .insert({ user_id: data.user.id, full_name: fullName, ...(phoneNumber ? { phone: phoneNumber } : {}) });
-        if (profErr && !profErr.message.includes("duplicate")) throw profErr;
+          .upsert(
+            {
+              user_id: userId,
+              full_name: fullName.trim(),
+              ...(phoneNumber ? { phone: phoneNumber } : {}),
+            },
+            { onConflict: "user_id" }
+          );
+        if (profErr) console.error("Error creating customer profile:", profErr);
+
+        toast.success("Welcome to Qblink!");
+
+        // If session is already created (auto sign-in enabled)
+        if (data.session) {
+          setSessionState(data.session);
+          navigate(safeNext || "/customer-dashboard", { replace: true });
+          return;
+        }
+
+        // Try signing in directly to get session
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: loginEmail,
+          password,
+        });
+
+        if (!signInErr && signInData.session) {
+          setSessionState(signInData.session);
+          navigate(safeNext || "/customer-dashboard", { replace: true });
+          return;
+        }
+
+        // If email confirmation is required
+        toast.info("Account created! Please check your email to confirm your account.");
+        navigate("/auth/signin");
       }
-      toast.success("Welcome to Qblink!");
     } catch (err: any) {
       const msg = err?.message ?? "Something went wrong";
       const low = msg.toLowerCase();
@@ -111,6 +132,7 @@ const CustomerSignUp = () => {
         navigate(`/auth/signin${next}`);
       } else {
         setFormError(msg);
+        toast.error(msg);
       }
     } finally {
       setLoading(false);
@@ -119,7 +141,11 @@ const CustomerSignUp = () => {
 
   return (
     <div className="min-h-screen soft-bg flex items-center justify-center px-4 py-10">
-      <SEO title="Create your Qblink account" description="Sign up in seconds and start joining queues from your phone." path="/auth/customer" />
+      <SEO
+        title="Create your Qblink account"
+        description="Sign up in seconds and start joining queues from your phone."
+        path="/auth/customer"
+      />
       <div className="w-full max-w-md">
         <button
           onClick={() => navigate("/auth")}
@@ -129,25 +155,40 @@ const CustomerSignUp = () => {
         </button>
 
         <div className="text-center mb-8">
-          <img src={logo} alt="Qblink" className="h-10 w-10 rounded-lg object-contain mx-auto mb-3" />
+          <div className="w-10 h-10 rounded-xl bg-white p-1.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0 mx-auto mb-3">
+            <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+          </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Create your account</h1>
           <p className="text-sm text-muted-foreground">Skip the line. Join queues from your phone.</p>
         </div>
 
-        <form onSubmit={handleContinue} className="bg-card rounded-2xl p-6 sm:p-8 card-shadow space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <GoogleButton onClick={handleGoogle} loading={googleBusy} />
-          <p className="text-xs text-center text-muted-foreground -mt-1">
-            <span className="font-semibold text-primary">Recommended</span> · No password to remember
-          </p>
-          <AuthDivider />
-
+        <form
+          onSubmit={handleContinue}
+          className="bg-card rounded-2xl p-6 sm:p-8 card-shadow space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300"
+        >
           <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-muted">
-            <button type="button" onClick={() => { setMode("phone"); setFormError(null); }}
-              className={`py-2 rounded-lg text-sm font-medium transition ${mode === "phone" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("phone");
+                setFormError(null);
+              }}
+              className={`py-2 rounded-lg text-sm font-medium transition ${
+                mode === "phone" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+              }`}
+            >
               WhatsApp
             </button>
-            <button type="button" onClick={() => { setMode("email"); setFormError(null); }}
-              className={`py-2 rounded-lg text-sm font-medium transition ${mode === "email" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("email");
+                setFormError(null);
+              }}
+              className={`py-2 rounded-lg text-sm font-medium transition ${
+                mode === "email" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+              }`}
+            >
               Email
             </button>
           </div>
@@ -156,8 +197,13 @@ const CustomerSignUp = () => {
             <label className="text-sm font-medium text-foreground mb-1.5 block">Full name</label>
             <div className="relative">
               <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input value={fullName} onChange={e => setFullName(e.target.value)} required placeholder="Jane Doe"
-                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
+              <input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                placeholder="Jane Doe"
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+              />
             </div>
           </div>
 
@@ -165,18 +211,28 @@ const CustomerSignUp = () => {
             <div>
               <label className="text-sm font-medium text-foreground mb-1.5 block">WhatsApp number</label>
               <div className="flex gap-2">
-                <select value={countryCode} onChange={e => setCountryCode(e.target.value)}
-                  className="px-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors">
-                  {COUNTRY_CODES.map(c => (
-                    <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="px-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+                >
+                  {COUNTRY_CODES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.code}
+                    </option>
                   ))}
                 </select>
                 <div className="relative flex-1">
                   <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input type="tel" inputMode="numeric" value={phone}
-                    onChange={e => setPhone(e.target.value.replace(/[^\d\s-]/g, ""))}
-                    required placeholder="98765 43210"
-                    className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/[^\d\s-]/g, ""))}
+                    required
+                    placeholder="98765 43210"
+                    className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+                  />
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-1.5">Businesses use this to notify you when it's your turn.</p>
@@ -186,8 +242,14 @@ const CustomerSignUp = () => {
               <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com"
-                  className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="you@example.com"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+                />
               </div>
             </div>
           )}
@@ -196,8 +258,15 @@ const CustomerSignUp = () => {
             <label className="text-sm font-medium text-foreground mb-1.5 block">Password</label>
             <div className="relative">
               <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} placeholder="At least 6 characters"
-                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                placeholder="At least 6 characters"
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+              />
             </div>
           </div>
 
@@ -208,14 +277,25 @@ const CustomerSignUp = () => {
             </div>
           )}
 
-          <button type="submit" disabled={loading}
-            className="w-full gradient-bg text-primary-foreground py-3.5 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating account...</> : "Create account"}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full gradient-bg text-primary-foreground py-3.5 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Creating account...
+              </>
+            ) : (
+              "Create account"
+            )}
           </button>
 
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/auth/signin" className="text-primary font-semibold hover:underline">Sign In</Link>
+            <Link to={safeNext ? `/auth/signin?next=${encodeURIComponent(safeNext)}` : "/auth/signin"} className="text-primary font-semibold hover:underline">
+              Sign In
+            </Link>
           </p>
         </form>
       </div>

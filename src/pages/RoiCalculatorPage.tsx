@@ -27,7 +27,9 @@ export const RoiCalculatorPage: React.FC = () => {
             </Link>
             <div className="h-4 w-[1px] bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
-              <img src={logo} alt="Qblink" className="w-6 h-6 object-contain" />
+              <div className="w-6 h-6 rounded-md bg-white p-0.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+                <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+              </div>
               <span className="font-display font-extrabold text-sm tracking-tight">
                 ROI Scenario Estimator
               </span>
@@ -58,7 +60,7 @@ export const RoiCalculatorPage: React.FC = () => {
           <div className="flex items-center gap-4">
             <Link to="/" className="hover:text-foreground">Home</Link>
             <Link to="/pitch" className="hover:text-foreground">Pitch Simulator</Link>
-            <Link to="/auth" className="hover:text-foreground">Start Free Pilot</Link>
+            <Link to="/auth/business" className="hover:text-foreground font-semibold text-primary">Start Free Pilot</Link>
           </div>
         </div>
       </footer>

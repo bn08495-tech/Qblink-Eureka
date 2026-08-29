@@ -66,11 +66,13 @@ export const DisplayTopHeader: React.FC<DisplayTopHeaderProps> = ({
     <header className="w-full flex items-center justify-between gap-4 pb-5 border-b border-border/80 flex-wrap">
       {/* Brand & Location */}
       <div className="flex items-center gap-3.5">
-        <img
-          src={logo}
-          alt="Qblink"
-          className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl object-contain shadow-md ring-1 ring-primary/20"
-        />
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white p-1 shadow-md ring-1 ring-black/10 flex items-center justify-center shrink-0">
+          <img
+            src={logo}
+            alt="Qblink"
+            className="w-full h-full object-contain"
+          />
+        </div>
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-base sm:text-lg md:text-xl font-black text-foreground tracking-tight truncate max-w-sm sm:max-w-md">

@@ -39,7 +39,7 @@ class DeploySim {
 
   /** Route + execute the strategy exactly as the SW would. */
   request(path: string, destination: string, mode = "no-cors", method = "GET"): Res {
-    const url = new URL(path, "https://qblinkk.lovable.app");
+    const url = new URL(path, "https://qblink.vercel.app");
     const ctx = { url, request: { mode, method, destination }, sameOrigin: true };
     const rule = runtimeCaching.find((r) => r.urlPattern(ctx));
     if (!rule) return this.fetchNetwork(path);
@@ -169,7 +169,7 @@ describe("workbox configuration guarantees", () => {
   it("routes navigations to NetworkFirst", () => {
     expect(
       resolveHandler({
-        url: new URL("https://qblinkk.lovable.app/dashboard"),
+        url: new URL("https://qblink.vercel.app/dashboard"),
         request: { mode: "navigate", method: "GET", destination: "document" },
         sameOrigin: true,
       })
@@ -180,7 +180,7 @@ describe("workbox configuration guarantees", () => {
     for (const p of ["/assets/index-AAAA1111.js", "/assets/main-9f8e7d6c.css", "/assets/dm-sans-1a2b3c4d.woff2"]) {
       expect(
         resolveHandler({
-          url: new URL(`https://qblinkk.lovable.app${p}`),
+          url: new URL(`https://qblink.vercel.app${p}`),
           request: { method: "GET", destination: p.endsWith(".css") ? "style" : p.endsWith(".woff2") ? "font" : "script" },
           sameOrigin: true,
         })
@@ -191,7 +191,7 @@ describe("workbox configuration guarantees", () => {
   it("never cache-firsts unhashed or cross-origin scripts", () => {
     expect(
       resolveHandler({
-        url: new URL("https://qblinkk.lovable.app/vendor/analytics.js"),
+        url: new URL("https://qblink.vercel.app/vendor/analytics.js"),
         request: { method: "GET", destination: "script" },
         sameOrigin: true,
       })
@@ -214,7 +214,7 @@ describe("workbox configuration guarantees", () => {
     expect(NAV_DENYLIST_RE.test("/~oauth/callback")).toBe(true);
     expect(
       resolveHandler({
-        url: new URL("https://qblinkk.lovable.app/~oauth/callback"),
+        url: new URL("https://qblink.vercel.app/~oauth/callback"),
         request: { mode: "navigate", method: "GET", destination: "document" },
         sameOrigin: true,
       })
@@ -224,7 +224,7 @@ describe("workbox configuration guarantees", () => {
   it("has no cache-first rule for HTML documents", () => {
     const htmlRules = runtimeCaching.filter((r) =>
       r.urlPattern({
-        url: new URL("https://qblinkk.lovable.app/"),
+        url: new URL("https://qblink.vercel.app/"),
         request: { mode: "navigate", method: "GET", destination: "document" },
         sameOrigin: true,
       })

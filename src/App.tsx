@@ -56,12 +56,10 @@ const AdminSystem = lazy(() => import("./pages/admin/AdminSystem.tsx"));
 const AdminExports = lazy(() => import("./pages/admin/AdminExports.tsx"));
 const PwaStatus = lazy(() => import("./pages/PwaStatus.tsx"));
 const CacheDiagnostics = lazy(() => import("./pages/CacheDiagnostics.tsx"));
-const OAuthConsent = lazy(() => import("./pages/OAuthConsent.tsx"));
 const PitchDemo = lazy(() => import("./pages/PitchDemo.tsx"));
 const RoiCalculatorPage = lazy(() => import("./pages/RoiCalculatorPage.tsx"));
 const ChaosToClarityPage = lazy(() => import("./pages/ChaosToClarityPage.tsx"));
 const IndustryMorphPage = lazy(() => import("./pages/IndustryMorphPage.tsx"));
-const SsoCallback = lazy(() => import("./pages/SsoCallback.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -123,7 +121,6 @@ const App = () => (
             <Route path="/auth/forgot-password" element={<ForgotPassword />} />
             <Route path="/auth/customer" element={<CustomerSignUp />} />
             <Route path="/auth/business" element={<BusinessSignUp />} />
-            <Route path="/sso-callback" element={<SsoCallback />} />
             <Route path="/customer-dashboard" element={<CustomerDashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/analytics" element={<Analytics />} />
@@ -142,7 +139,6 @@ const App = () => (
             <Route path="/install" element={<Install />} />
             <Route path="/pwa-status" element={<PwaStatus />} />
             <Route path="/cache-diagnostics" element={<CacheDiagnostics />} />
-            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
             <Route path="/admin/businesses" element={<AdminRoute><AdminBusinesses /></AdminRoute>} />
             <Route path="/admin/customers" element={<AdminRoute><AdminCustomers /></AdminRoute>} />

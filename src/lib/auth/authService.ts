@@ -1,102 +1,91 @@
 /**
- * Auth abstraction layer with Clerk Google Authentication support.
+ * Auth abstraction and utility layer for Supabase Authentication.
  */
 import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
-export type AuthRole = "customer" | "business";
+export type AuthRole = "customer" | "business" | "admin";
 
-export interface UserLike {
-  id: string;
-  fullName?: string | null;
-  primaryEmailAddress?: { emailAddress?: string } | null;
-  emailAddresses?: Array<{ emailAddress?: string }>;
+/**
+ * Resolves the role for a given user ID from the database.
+ */
+export async function getUserRole(userId: string): Promise<AuthRole | null> {
+  try {
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data.role as AuthRole;
+  } catch (err) {
+    console.error("Error fetching user role:", err);
+    return null;
+  }
 }
 
 /**
- * Prepares session storage with the user's role before triggering Google OAuth.
+ * Resolves destination dashboard route based on user ID, metadata, and role.
  */
-export function prepareGoogleAuth(role: AuthRole, redirectPath?: string): void {
-  try {
-    sessionStorage.setItem("qblink.pendingRole", role);
-    if (redirectPath) sessionStorage.setItem("qblink.pendingNext", redirectPath);
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-/**
- * Idempotently provisions user_roles / customer_profiles / business rows for the
- * signed-in Clerk user and returns the destination URL.
- */
-export async function ensureRoleAndProfile(clerkUser?: UserLike | null): Promise<string> {
-  if (!clerkUser) return "/auth";
-
-  const userId = clerkUser.id;
-  const email = clerkUser.primaryEmailAddress?.emailAddress ?? clerkUser.emailAddresses?.[0]?.emailAddress ?? "";
-  const fullName = clerkUser.fullName || email.split("@")[0] || "User";
-
-  let role: AuthRole = "customer";
-  let targetNext: string | null = null;
-
-  try {
-    const storedRole = sessionStorage.getItem("qblink.pendingRole");
-    if (storedRole === "business" || storedRole === "customer") role = storedRole;
-    targetNext = sessionStorage.getItem("qblink.pendingNext");
-  } catch {
-    /* ignore */
-  }
-
-  const { data: existingRoles } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .limit(1);
-
-  if (!existingRoles || existingRoles.length === 0) {
-    await supabase.from("user_roles").insert({ user_id: userId, role });
-    if (role === "customer") {
-      await supabase.from("customer_profiles").insert({
-        user_id: userId,
-        full_name: fullName,
-      });
-    }
-  } else {
-    role = (existingRoles[0]?.role as AuthRole) || role;
-  }
-
-  // Create stashed business draft if exists
-  try {
-    const draftRaw = sessionStorage.getItem("qblink.pendingBusiness");
-    if (draftRaw) {
-      const draft = JSON.parse(draftRaw);
-      const { data: existingBiz } = await supabase
-        .from("businesses")
-        .select("id")
-        .eq("owner_id", userId)
-        .limit(1);
-
-      if (!existingBiz || existingBiz.length === 0) {
-        await supabase.from("businesses").insert({
-          owner_id: userId,
-          name: draft.name,
-          category: draft.category,
-          description: draft.description || null,
-          address: draft.address || null,
-          default_settings: draft.default_settings || {},
-        });
-      }
-      sessionStorage.removeItem("qblink.pendingBusiness");
-    }
-  } catch {
-    /* ignore */
-  }
-
-  if (targetNext && targetNext.startsWith("/")) {
-    sessionStorage.removeItem("qblink.pendingNext");
+export async function resolveUserDestination(
+  userId: string,
+  targetNext?: string | null,
+  userObj?: { email?: string | null; user_metadata?: Record<string, any> } | null
+): Promise<string> {
+  if (targetNext && targetNext.startsWith("/") && !targetNext.startsWith("//")) {
     return targetNext;
   }
 
-  return role === "business" ? "/dashboard" : "/customer-dashboard";
+  // 1. Fast-path: check email or user_metadata for instant routing without network latency
+  const metaRole = userObj?.user_metadata?.role;
+  const email = userObj?.email?.toLowerCase();
+
+  if (email === "qblinktrial@gmail.com" || metaRole === "admin") {
+    return "/admin";
+  }
+  if (metaRole === "business") {
+    return "/dashboard";
+  }
+  if (metaRole === "customer") {
+    return "/customer-dashboard";
+  }
+
+  // 2. Database checks in parallel with timeout guard (max 1.5s)
+  try {
+    const rolePromise = getUserRole(userId);
+    const bizPromise = supabase
+      .from("businesses")
+      .select("id")
+      .eq("owner_id", userId)
+      .limit(1)
+      .then(({ data }) => (data && data.length > 0 ? ("business" as AuthRole) : null))
+      .catch(() => null);
+    const adminPromise = supabase
+      .rpc("is_admin")
+      .then(({ data, error }) => (!error && Boolean(data) ? ("admin" as AuthRole) : null))
+      .catch(() => null);
+
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500));
+
+    const result = await Promise.race([
+      Promise.allSettled([adminPromise, rolePromise, bizPromise]),
+      timeoutPromise,
+    ]);
+
+    if (result && Array.isArray(result)) {
+      const [adminRes, roleRes, bizRes] = result;
+      if (adminRes.status === "fulfilled" && adminRes.value === "admin") return "/admin";
+      if (roleRes.status === "fulfilled" && roleRes.value === "business") return "/dashboard";
+      if (bizRes.status === "fulfilled" && bizRes.value === "business") return "/dashboard";
+      if (roleRes.status === "fulfilled" && roleRes.value === "customer") return "/customer-dashboard";
+    }
+  } catch (err) {
+    console.error("Error resolving user destination:", err);
+  }
+
+  // Default to customer dashboard
+  return "/customer-dashboard";
 }
 
 /* --------------------- Verification-state helpers ---------------------- */
@@ -131,4 +120,5 @@ export async function isPhoneVerified(): Promise<boolean> {
 export async function isEmailVerified(): Promise<boolean> {
   return (await getVerificationStatus()).emailVerified;
 }
+
 

@@ -57,7 +57,7 @@ export const Opening = () => {
 
           <div className="mt-10 flex flex-wrap items-center gap-6">
             <Link
-              to="/auth"
+              to="/auth/business"
               className="group inline-flex items-center gap-3 bg-glow text-ink font-mono-caps px-6 py-4 hover:bg-cream transition-colors animate-glow-pulse"
             >
               Start free pilot

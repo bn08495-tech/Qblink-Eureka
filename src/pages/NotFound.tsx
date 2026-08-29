@@ -14,7 +14,9 @@ const NotFound = () => {
     <div className="min-h-screen soft-bg flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md bg-card rounded-3xl card-shadow p-8 text-center">
         <Link to="/" className="inline-flex items-center gap-2 mb-6">
-          <img src={logo} alt="Qblink" className="h-9 w-9 rounded-lg object-contain" />
+          <div className="w-9 h-9 rounded-xl bg-white p-1 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+            <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+          </div>
           <span className="text-lg font-bold text-foreground">Qblink</span>
         </Link>
         <p className="text-sm font-semibold text-primary uppercase tracking-widest mb-1">404</p>

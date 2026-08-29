@@ -6,8 +6,10 @@ const Footer = () => (
     <div className="section-container px-4 sm:px-6 lg:px-8">
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <img src={logo} alt="Qblink" className="h-9 w-9 rounded-lg object-contain" />
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="w-9 h-9 rounded-xl bg-white p-1 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+              <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+            </div>
             <span className="text-xl font-bold text-background">Qblink</span>
           </div>
           <p className="text-sm leading-relaxed text-background/60">

@@ -101,7 +101,9 @@ const ForgotPassword = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <img src={logo} alt="Qblink" className="h-10 w-10 rounded-lg object-contain" />
+            <div className="w-10 h-10 rounded-xl bg-white p-1.5 shadow-sm ring-1 ring-black/10 flex items-center justify-center shrink-0">
+              <img src={logo} alt="Qblink" className="w-full h-full object-contain" />
+            </div>
             <span className="text-2xl font-bold text-foreground">Qblink</span>
           </Link>
           <h1 className="text-2xl font-bold text-foreground mb-2">

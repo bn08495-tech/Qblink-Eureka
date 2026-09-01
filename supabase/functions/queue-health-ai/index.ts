@@ -1,9 +1,78 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+/* ---------- CORS: origin whitelist instead of wildcard ---------- */
+
+const ALLOWED_ORIGINS = new Set([
+  "https://qblink.vercel.app",
+  "https://qblink-nine.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:4173",
+]);
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin") ?? "";
+  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : "https://qblink.vercel.app";
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Vary": "Origin",
+  };
+}
+
+/* ---------- AI provider: flexible key chain (no Lovable dependency) ---------- */
+
+function getAIConfig(): { apiKey: string; baseUrl: string; model: string } {
+  const openrouterKey = Deno.env.get("OPENROUTER_API_KEY");
+  if (openrouterKey) {
+    return {
+      apiKey: openrouterKey,
+      baseUrl: "https://openrouter.ai/api/v1/chat/completions",
+      model: "google/gemini-2.5-flash",
+    };
+  }
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  if (openaiKey) {
+    return {
+      apiKey: openaiKey,
+      baseUrl: "https://api.openai.com/v1/chat/completions",
+      model: "gpt-4o-mini",
+    };
+  }
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  if (geminiKey) {
+    return {
+      apiKey: geminiKey,
+      baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      model: "gemini-2.5-flash",
+    };
+  }
+  // Legacy fallback
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+  if (lovableKey) {
+    return {
+      apiKey: lovableKey,
+      baseUrl: "https://ai.gateway.lovable.dev/v1/chat/completions",
+      model: "google/gemini-2.5-flash",
+    };
+  }
+  throw new Error("No AI API key configured. Set OPENROUTER_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, or LOVABLE_API_KEY.");
+}
+
+/* ---------- Input sanitization ---------- */
+
+const MAX_MESSAGES = 15;
+const MAX_MSG_LENGTH = 1500;
+
+function sanitizeMessages(raw: Msg[]): Msg[] {
+  return raw
+    .slice(-MAX_MESSAGES)
+    .map((m) => ({
+      role: m.role,
+      content: String(m.content || "").slice(0, MAX_MSG_LENGTH),
+    }));
+}
+
+/* ---------- Types ---------- */
 
 interface Msg { role: "user" | "assistant" | "system"; content: string }
 
@@ -95,12 +164,16 @@ TEAM CONTACTS (use these everywhere, never invent others):
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { messages = [], businessId, mode = "chat" } = await req.json() as { messages: Msg[]; businessId: string; mode?: string };
+    const { messages: rawMessages = [], businessId, mode = "chat" } = await req.json() as { messages: Msg[]; businessId: string; mode?: string };
     if (!businessId) {
       return new Response(JSON.stringify({ error: "businessId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    // Sanitize user input
+    const messages = sanitizeMessages(rawMessages);
 
     // Require authentication and verify ownership of the requested business.
     const authHeader = req.headers.get("Authorization") || "";
@@ -131,21 +204,18 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Business not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
+    const aiConfig = getAIConfig();
 
     // Seed first message with a proactive recommendation if no user messages yet
     const convo: Msg[] = messages.length === 0 || mode === "init"
       ? [{ role: "user", content: "Give me a proactive Queue Health assessment for my business right now: top 2 issues to fix this week, the single highest-leverage action I can take today, and an industry benchmark I should aim for. Be specific to my numbers." }]
       : messages;
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const resp = await fetch(aiConfig.baseUrl, {
       method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${aiConfig.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: aiConfig.model,
         messages: [{ role: "system", content: systemPrompt(ctx) }, ...convo],
         stream: true,
       }),
@@ -162,6 +232,6 @@ Deno.serve(async (req) => {
     return new Response(resp.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
   } catch (e) {
     console.error("queue-health-ai error", e);
-    return new Response(JSON.stringify({ error: "Unexpected error. Reach the team at " + TEAM_EMAIL + " / " + TEAM_EMAIL_ALT + " or " + TEAM_PHONE + "." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: "Unexpected error. Reach the team at " + TEAM_EMAIL + " / " + TEAM_EMAIL_ALT + " or " + TEAM_PHONE + "." }), { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } });
   }
 });

@@ -1,10 +1,78 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+/* ---------- CORS: origin whitelist instead of wildcard ---------- */
+
+const ALLOWED_ORIGINS = new Set([
+  "https://qblink.vercel.app",
+  "https://qblink-nine.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:4173",
+]);
+
+function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin") ?? "";
+  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : "https://qblink.vercel.app";
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Vary": "Origin",
+  };
+}
+
+/* ---------- AI provider: flexible key chain (no Lovable dependency) ---------- */
+
+function getAIConfig(): { apiKey: string; baseUrl: string; model: string } {
+  const openrouterKey = Deno.env.get("OPENROUTER_API_KEY");
+  if (openrouterKey) {
+    return {
+      apiKey: openrouterKey,
+      baseUrl: "https://openrouter.ai/api/v1/chat/completions",
+      model: "google/gemini-2.5-flash",
+    };
+  }
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  if (openaiKey) {
+    return {
+      apiKey: openaiKey,
+      baseUrl: "https://api.openai.com/v1/chat/completions",
+      model: "gpt-4o-mini",
+    };
+  }
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  if (geminiKey) {
+    return {
+      apiKey: geminiKey,
+      baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      model: "gemini-2.5-flash",
+    };
+  }
+  // Legacy fallback
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+  if (lovableKey) {
+    return {
+      apiKey: lovableKey,
+      baseUrl: "https://ai.gateway.lovable.dev/v1/chat/completions",
+      model: "google/gemini-3-flash-preview",
+    };
+  }
+  throw new Error("No AI API key configured. Set OPENROUTER_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, or LOVABLE_API_KEY.");
+}
+
+/* ---------- Input sanitization ---------- */
+
+const MAX_MESSAGES = 20;
+const MAX_MSG_LENGTH = 2000;
+
+function sanitizeMessages(raw: Msg[]): Msg[] {
+  return raw
+    .slice(-MAX_MESSAGES)
+    .map((m) => ({
+      role: m.role,
+      content: String(m.content || "").slice(0, MAX_MSG_LENGTH),
+    }));
+}
+
+/* ---------- Types & helpers ---------- */
 
 interface Msg { role: "user" | "assistant" | "system"; content: string }
 
@@ -43,6 +111,7 @@ const DEMO_FALLBACK = [
 ];
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -61,10 +130,12 @@ Deno.serve(async (req) => {
         location?: string;
       };
     };
-    const { messages = [], mode, businessId, insight, payload, queueContext } = body;
+    const { messages: rawMessages = [], mode, businessId, insight, payload, queueContext } = body;
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    // Sanitize user input
+    const messages = sanitizeMessages(rawMessages);
+
+    const aiConfig = getAIConfig();
 
     // For anonymous/aggregate modes (customer, queue_companion) the anon key is enough.
     // For business-scoped modes, we require an authenticated owner of the business.
@@ -332,17 +403,17 @@ ${QBLINK_KNOWLEDGE}
 ${context}`;
 
     if (insight) {
-      return await runInsight({ insight, mode, businessId, payload, supabase, LOVABLE_API_KEY });
+      return await runInsight({ insight, mode, businessId, payload, supabase, aiConfig, corsHeaders });
     }
 
-    const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const upstream = await fetch(aiConfig.baseUrl, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${aiConfig.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: aiConfig.model,
         stream: true,
         messages: [{ role: "system", content: systemPrompt }, ...messages],
       }),
@@ -372,7 +443,7 @@ ${context}`;
   } catch (e) {
     console.error(e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
 });
@@ -385,9 +456,10 @@ async function runInsight(args: {
   businessId?: string;
   payload?: Record<string, unknown>;
   supabase: ReturnType<typeof createClient>;
-  LOVABLE_API_KEY: string;
+  aiConfig: { apiKey: string; baseUrl: string; model: string };
+  corsHeaders: Record<string, string>;
 }) {
-  const { insight, mode, businessId, payload, supabase, LOVABLE_API_KEY } = args;
+  const { insight, mode, businessId, payload, supabase, aiConfig, corsHeaders } = args;
   let dataSnapshot = "";
   let task = "";
 
@@ -475,11 +547,11 @@ async function runInsight(args: {
   const sys = `You are Qblink's operational AI. Be extremely concise, no fluff, no greetings, no markdown headings. Use only the data given. Output plain short sentences.`;
   const user = `DATA: ${dataSnapshot}\n\nTASK: ${task}\n\nReturn JSON via the tool 'insight' with fields: summary (string, 1-2 sentences), suggestions (array of 2-3 short action strings), urgency ("low"|"medium"|"high").`;
 
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const resp = await fetch(aiConfig.baseUrl, {
     method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${aiConfig.apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: aiConfig.model,
       messages: [{ role: "system", content: sys }, { role: "user", content: user }],
       tools: [{
         type: "function",

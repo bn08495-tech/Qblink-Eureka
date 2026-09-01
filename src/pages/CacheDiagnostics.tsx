@@ -139,7 +139,7 @@ const CacheDiagnostics = () => {
             <p className="text-muted-foreground">Service workers are not supported in this browser.</p>
           ) : sw.registrations.length === 0 ? (
             <p className="text-muted-foreground">
-              No registrations — expected in dev and Lovable preview, where registration is intentionally blocked.
+              No registrations — expected in dev and preview environments, where registration is intentionally blocked.
             </p>
           ) : (
             <div className="space-y-3">

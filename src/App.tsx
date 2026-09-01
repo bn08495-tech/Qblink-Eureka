@@ -63,9 +63,64 @@ const IndustryMorphPage = lazy(() => import("./pages/IndustryMorphPage.tsx"));
 
 const queryClient = new QueryClient();
 
+import { Component, ErrorInfo, ReactNode } from "react";
+
+class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("AppErrorBoundary caught error:", error, errorInfo);
+    // If it's a chunk loading failure from a new deployment, automatically reload once
+    if (error.message?.includes("Failed to fetch dynamically imported module") || error.message?.includes("Loading chunk")) {
+      const hasReloaded = sessionStorage.getItem("qb_chunk_reload");
+      if (!hasReloaded) {
+        sessionStorage.setItem("qb_chunk_reload", "1");
+        window.location.reload();
+      }
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 card-shadow max-w-md w-full text-center space-y-4">
+            <div className="w-12 h-12 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center mx-auto text-xl font-bold">
+              !
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Something went wrong</h2>
+            <p className="text-sm text-muted-foreground">
+              {this.state.error?.message || "An unexpected error occurred while loading this page."}
+            </p>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem("qb_chunk_reload");
+                window.location.reload();
+              }}
+              className="gradient-bg text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity w-full"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 /** Neutral, layout-stable fallback while a route chunk loads. */
 const RouteFallback = () => (
-  <div className="min-h-dvh bg-background" role="status" aria-live="polite" aria-label="Loading page" />
+  <div className="min-h-dvh bg-background flex items-center justify-center" role="status" aria-live="polite" aria-label="Loading page">
+    <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+  </div>
 );
 
 /**
@@ -108,59 +163,61 @@ const App = () => (
             <GlobalBackButton />
             <InstallAppPrompt />
           <Suspense fallback={<RouteFallback />}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/pitch" element={<PitchDemo />} />
-            <Route path="/roi" element={<RoiCalculatorPage />} />
-            <Route path="/calculator" element={<RoiCalculatorPage />} />
-            <Route path="/chaos-to-clarity" element={<ChaosToClarityPage />} />
-            <Route path="/industries" element={<IndustryMorphPage />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/auth" element={<RoleSelection />} />
-            <Route path="/auth/signin" element={<SignIn />} />
-            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-            <Route path="/auth/customer" element={<CustomerSignUp />} />
-            <Route path="/auth/business" element={<BusinessSignUp />} />
-            <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/analytics" element={<Analytics />} />
-            <Route path="/dashboard/insights" element={<Insights />} />
-            <Route path="/dashboard/queue-health" element={<QueueHealth />} />
-            <Route path="/dashboard/tokens" element={<Tokens />} />
-            <Route path="/dashboard/settings" element={<Settings />} />
-            <Route path="/dashboard/history" element={<QueueHistory />} />
-            <Route path="/dashboard/pickup" element={<Pickup />} />
-            <Route path="/dashboard/menu" element={<MenuManagement />} />
-            <Route path="/join/:queueId" element={<JoinQueue />} />
-            <Route path="/display/:queueId" element={<PublicDisplay />} />
-            <Route path="/pickup/:businessId" element={<PickupOrder />} />
-            <Route path="/pickup/track/:orderId" element={<PickupTrack />} />
-            <Route path="/affiliate" element={<AffiliatePage />} />
-            <Route path="/install" element={<Install />} />
-            <Route path="/pwa-status" element={<PwaStatus />} />
-            <Route path="/cache-diagnostics" element={<CacheDiagnostics />} />
-            <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
-            <Route path="/admin/businesses" element={<AdminRoute><AdminBusinesses /></AdminRoute>} />
-            <Route path="/admin/customers" element={<AdminRoute><AdminCustomers /></AdminRoute>} />
-            <Route path="/admin/queues" element={<AdminRoute><AdminQueues /></AdminRoute>} />
-            <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
-            <Route path="/admin/revenue" element={<AdminRoute><AdminRevenue /></AdminRoute>} />
-            <Route path="/admin/leads" element={<AdminRoute><AdminLeads /></AdminRoute>} />
-            <Route path="/admin/discovery" element={<AdminRoute><AdminDiscovery /></AdminRoute>} />
-            <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
-            <Route path="/admin/content" element={<AdminRoute><AdminContent /></AdminRoute>} />
-            <Route path="/admin/announcements" element={<AdminRoute><AdminAnnouncements /></AdminRoute>} />
-            <Route path="/admin/marketing" element={<AdminRoute><AdminMarketing /></AdminRoute>} />
-            <Route path="/admin/queue-templates" element={<AdminRoute><AdminQueueTemplates /></AdminRoute>} />
-            <Route path="/admin/support" element={<AdminRoute><AdminSupport /></AdminRoute>} />
-            <Route path="/admin/impact" element={<AdminRoute><AdminImpact /></AdminRoute>} />
-            <Route path="/admin/ai" element={<AdminRoute><AdminAIKnowledge /></AdminRoute>} />
-            <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
-            <Route path="/admin/system" element={<AdminRoute><AdminSystem /></AdminRoute>} />
-            <Route path="/admin/exports" element={<AdminRoute><AdminExports /></AdminRoute>} />
-            <Route path="*" element={<NotFound />} />
-            </Routes>
-            </Suspense>
+            <AppErrorBoundary>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/pitch" element={<PitchDemo />} />
+                <Route path="/roi" element={<RoiCalculatorPage />} />
+                <Route path="/calculator" element={<RoiCalculatorPage />} />
+                <Route path="/chaos-to-clarity" element={<ChaosToClarityPage />} />
+                <Route path="/industries" element={<IndustryMorphPage />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/auth" element={<RoleSelection />} />
+                <Route path="/auth/signin" element={<SignIn />} />
+                <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+                <Route path="/auth/customer" element={<CustomerSignUp />} />
+                <Route path="/auth/business" element={<BusinessSignUp />} />
+                <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard/analytics" element={<Analytics />} />
+                <Route path="/dashboard/insights" element={<Insights />} />
+                <Route path="/dashboard/queue-health" element={<QueueHealth />} />
+                <Route path="/dashboard/tokens" element={<Tokens />} />
+                <Route path="/dashboard/settings" element={<Settings />} />
+                <Route path="/dashboard/history" element={<QueueHistory />} />
+                <Route path="/dashboard/pickup" element={<Pickup />} />
+                <Route path="/dashboard/menu" element={<MenuManagement />} />
+                <Route path="/join/:queueId" element={<JoinQueue />} />
+                <Route path="/display/:queueId" element={<PublicDisplay />} />
+                <Route path="/pickup/:businessId" element={<PickupOrder />} />
+                <Route path="/pickup/track/:orderId" element={<PickupTrack />} />
+                <Route path="/affiliate" element={<AffiliatePage />} />
+                <Route path="/install" element={<Install />} />
+                <Route path="/pwa-status" element={<PwaStatus />} />
+                <Route path="/cache-diagnostics" element={<CacheDiagnostics />} />
+                <Route path="/admin" element={<AdminRoute><AdminOverview /></AdminRoute>} />
+                <Route path="/admin/businesses" element={<AdminRoute><AdminBusinesses /></AdminRoute>} />
+                <Route path="/admin/customers" element={<AdminRoute><AdminCustomers /></AdminRoute>} />
+                <Route path="/admin/queues" element={<AdminRoute><AdminQueues /></AdminRoute>} />
+                <Route path="/admin/analytics" element={<AdminRoute><AdminAnalytics /></AdminRoute>} />
+                <Route path="/admin/revenue" element={<AdminRoute><AdminRevenue /></AdminRoute>} />
+                <Route path="/admin/leads" element={<AdminRoute><AdminLeads /></AdminRoute>} />
+                <Route path="/admin/discovery" element={<AdminRoute><AdminDiscovery /></AdminRoute>} />
+                <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+                <Route path="/admin/content" element={<AdminRoute><AdminContent /></AdminRoute>} />
+                <Route path="/admin/announcements" element={<AdminRoute><AdminAnnouncements /></AdminRoute>} />
+                <Route path="/admin/marketing" element={<AdminRoute><AdminMarketing /></AdminRoute>} />
+                <Route path="/admin/queue-templates" element={<AdminRoute><AdminQueueTemplates /></AdminRoute>} />
+                <Route path="/admin/support" element={<AdminRoute><AdminSupport /></AdminRoute>} />
+                <Route path="/admin/impact" element={<AdminRoute><AdminImpact /></AdminRoute>} />
+                <Route path="/admin/ai" element={<AdminRoute><AdminAIKnowledge /></AdminRoute>} />
+                <Route path="/admin/notifications" element={<AdminRoute><AdminNotifications /></AdminRoute>} />
+                <Route path="/admin/system" element={<AdminRoute><AdminSystem /></AdminRoute>} />
+                <Route path="/admin/exports" element={<AdminRoute><AdminExports /></AdminRoute>} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AppErrorBoundary>
+          </Suspense>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

@@ -128,8 +128,8 @@ const RoleSelection = () => {
       </div>
 
       <p className="text-xs text-muted-foreground mt-10 text-center">
-        By signing up, you agree to our <Link to="/" className="text-primary hover:underline">Terms</Link> and{" "}
-        <Link to="/" className="text-primary hover:underline">Privacy Policy</Link>
+        By signing up, you agree to our <Link to="/terms" className="text-primary hover:underline">Terms</Link> and{" "}
+        <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
       </p>
     </div>
   );

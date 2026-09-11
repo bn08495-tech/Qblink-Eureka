@@ -148,9 +148,12 @@ const SignIn = () => {
 
           {mode === "phone" ? (
             <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">WhatsApp number</label>
+              <label htmlFor="signin-phone" className="text-sm font-medium text-foreground mb-1.5 block">WhatsApp number</label>
               <div className="flex gap-2">
+                <label htmlFor="signin-country-code" className="sr-only">Country code</label>
                 <select
+                  id="signin-country-code"
+                  aria-label="Country code"
                   value={countryCode}
                   onChange={(e) => setCountryCode(e.target.value)}
                   className="px-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
@@ -162,10 +165,14 @@ const SignIn = () => {
                   ))}
                 </select>
                 <div className="relative flex-1">
-                  <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                   <input
+                    id="signin-phone"
                     type="tel"
                     inputMode="numeric"
+                    autoComplete="tel"
+                    aria-invalid={Boolean(errorMsg && mode === "phone")}
+                    aria-describedby={errorMsg ? "signin-error" : undefined}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/[^\d\s-]/g, ""))}
                     required
@@ -177,11 +184,15 @@ const SignIn = () => {
             </div>
           ) : (
             <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
+              <label htmlFor="signin-email" className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                 <input
+                  id="signin-email"
                   type="email"
+                  autoComplete="email"
+                  aria-invalid={Boolean(errorMsg && mode === "email")}
+                  aria-describedby={errorMsg ? "signin-error" : undefined}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -193,11 +204,15 @@ const SignIn = () => {
           )}
 
           <div>
-            <label className="text-sm font-medium text-foreground mb-1.5 block">Password</label>
+            <label htmlFor="signin-password" className="text-sm font-medium text-foreground mb-1.5 block">Password</label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               <input
+                id="signin-password"
                 type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                aria-invalid={Boolean(errorMsg && errorMsg.toLowerCase().includes("password"))}
+                aria-describedby={errorMsg ? "signin-error" : undefined}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -209,7 +224,9 @@ const SignIn = () => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors p-1 rounded-md"
+                aria-controls="signin-password"
+                aria-pressed={showPassword}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors p-1 rounded-md"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -224,7 +241,7 @@ const SignIn = () => {
           </div>
 
           {errorMsg && (
-            <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex gap-2.5">
+            <div id="signin-error" role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex gap-2.5">
               <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-destructive font-medium leading-snug">{errorMsg}</p>

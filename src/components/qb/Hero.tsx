@@ -114,7 +114,7 @@ export const Hero = () => {
             className="mt-7 text-base sm:text-lg stage-muted max-w-xl leading-relaxed"
           >
             Qblink turns walk-in chaos into a measured flow. Customers scan, hold their place from
-            anywhere, and arrive at the exact minute they're needed — while your counter runs on
+            anywhere, and arrive smoothly as their turn approaches — while your counter runs on
             live position data, forecasts and operational intelligence.
           </motion.p>
 
@@ -226,9 +226,9 @@ export const Hero = () => {
         animate={{ opacity: 0.65 }}
         transition={{ delay: 1, duration: 1 }}
         className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce"
-        aria-hidden
+        aria-hidden="true"
       >
-        <svg width="20" height="12" viewBox="0 0 20 12" fill="none">
+        <svg width="20" height="12" viewBox="0 0 20 12" fill="none" aria-hidden="true" focusable="false">
           <path d="M2 2l8 8 8-8" stroke="hsl(var(--brand-cream))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </motion.div>

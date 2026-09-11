@@ -26,9 +26,12 @@ export const InterviewFAQ = () => {
           {qa.map((row, i) => (
             <div key={i} className="border-b border-glow/15 pb-8">
               <button
-                onClick={() => setOpen(open === i ? -1 : i)}
-                className="w-full text-left grid grid-cols-[auto_1fr_auto] gap-6 items-baseline"
+                type="button"
+                id={`faq-btn-${i}`}
+                aria-controls={`faq-panel-${i}`}
                 aria-expanded={open === i}
+                onClick={() => setOpen(open === i ? -1 : i)}
+                className="w-full text-left grid grid-cols-[auto_1fr_auto] gap-6 items-baseline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[hsl(var(--glow))] rounded-lg p-1"
               >
                 <span className="font-mono-caps text-glow/70">Q · 0{i + 1}</span>
                 <span className="font-display text-xl sm:text-2xl text-cream leading-snug italic">
@@ -42,6 +45,9 @@ export const InterviewFAQ = () => {
                 {open === i && (
                   <motion.div
                     key={`answer-${i}`}
+                    id={`faq-panel-${i}`}
+                    role="region"
+                    aria-labelledby={`faq-btn-${i}`}
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}

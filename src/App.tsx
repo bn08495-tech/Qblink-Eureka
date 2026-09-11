@@ -60,6 +60,8 @@ const PitchDemo = lazy(() => import("./pages/PitchDemo.tsx"));
 const RoiCalculatorPage = lazy(() => import("./pages/RoiCalculatorPage.tsx"));
 const ChaosToClarityPage = lazy(() => import("./pages/ChaosToClarityPage.tsx"));
 const IndustryMorphPage = lazy(() => import("./pages/IndustryMorphPage.tsx"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.tsx"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -192,6 +194,8 @@ const App = () => (
                 <Route path="/pickup/:businessId" element={<PickupOrder />} />
                 <Route path="/pickup/track/:orderId" element={<PickupTrack />} />
                 <Route path="/affiliate" element={<AffiliatePage />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/install" element={<Install />} />
                 <Route path="/pwa-status" element={<PwaStatus />} />
                 <Route path="/cache-diagnostics" element={<CacheDiagnostics />} />

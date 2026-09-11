@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin } from "lucide-react";
 import logo from "@/assets/qblink-logo.png";
 
@@ -20,19 +21,19 @@ const Footer = () => (
         <div>
           <h4 className="font-semibold text-background mb-4 text-sm">Quick Links</h4>
           <ul className="space-y-2.5 text-sm">
-            <li><a href="#how-it-works" className="hover:text-background transition-colors">How It Works</a></li>
-            <li><a href="#industries" className="hover:text-background transition-colors">Industries</a></li>
-            <li><a href="#features" className="hover:text-background transition-colors">Features</a></li>
-            <li><a href="#affiliate" className="hover:text-background transition-colors">Affiliate Program</a></li>
-            <li><a href="#about" className="hover:text-background transition-colors">About</a></li>
+            <li><a href="/#product" className="hover:text-background transition-colors">Product</a></li>
+            <li><a href="/#industries" className="hover:text-background transition-colors">Industries</a></li>
+            <li><a href="/#pricing" className="hover:text-background transition-colors">Pricing</a></li>
+            <li><Link to="/affiliate" className="hover:text-background transition-colors">Affiliate Program</Link></li>
+            <li><a href="/#contact" className="hover:text-background transition-colors">Contact / Book a Demo</a></li>
           </ul>
         </div>
 
         <div>
           <h4 className="font-semibold text-background mb-4 text-sm">Legal</h4>
           <ul className="space-y-2.5 text-sm">
-            <li><a href="#" className="hover:text-background transition-colors">Privacy Policy</a></li>
-            <li><a href="#" className="hover:text-background transition-colors">Terms of Service</a></li>
+            <li><Link to="/privacy" className="hover:text-background transition-colors">Privacy Policy</Link></li>
+            <li><Link to="/terms" className="hover:text-background transition-colors">Terms of Service</Link></li>
           </ul>
         </div>
 

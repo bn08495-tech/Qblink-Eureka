@@ -95,7 +95,7 @@ const ContactSection = () => {
   const inputClass = "w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow";
 
   return (
-    <section id="contact" className="section-padding soft-bg">
+    <section id="contact" className="section-padding soft-bg scroll-mt-20">
       <div className="section-container">
         <SectionHeading
           badge="Get Started"
@@ -159,24 +159,101 @@ const ContactSection = () => {
               onUpdate={(n, p) => { setForm(f => ({ ...f, name: n, phone: p })); setPrefilled(true); }}
             />
             <div className="grid sm:grid-cols-2 gap-5">
-              <input type="text" placeholder="Your Name *" required value={form.name} onChange={e => setForm({...form, name: e.target.value})} className={inputClass} />
-              <input type="text" placeholder="Business Name" value={form.business} onChange={e => setForm({...form, business: e.target.value})} className={inputClass} />
+              <div>
+                <label htmlFor="contact-name" className="text-xs font-semibold text-foreground mb-1.5 block">
+                  Your Name <span className="text-primary">*</span>
+                </label>
+                <input
+                  id="contact-name"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="e.g. Rahul Verma"
+                  required
+                  value={form.name}
+                  onChange={e => setForm({...form, name: e.target.value})}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label htmlFor="contact-business" className="text-xs font-semibold text-foreground mb-1.5 block">
+                  Business Name
+                </label>
+                <input
+                  id="contact-business"
+                  type="text"
+                  autoComplete="organization"
+                  placeholder="e.g. City Dental Care"
+                  value={form.business}
+                  onChange={e => setForm({...form, business: e.target.value})}
+                  className={inputClass}
+                />
+              </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-5">
-              <input type="email" placeholder="Email Address *" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} className={inputClass} />
-              <input type="tel" required placeholder="Phone Number *" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} className={inputClass} />
+              <div>
+                <label htmlFor="contact-email" className="text-xs font-semibold text-foreground mb-1.5 block">
+                  Email Address <span className="text-primary">*</span>
+                </label>
+                <input
+                  id="contact-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  required
+                  value={form.email}
+                  onChange={e => setForm({...form, email: e.target.value})}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label htmlFor="contact-phone" className="text-xs font-semibold text-foreground mb-1.5 block">
+                  Phone Number <span className="text-primary">*</span>
+                </label>
+                <input
+                  id="contact-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  required
+                  placeholder="+91 98765 43210"
+                  value={form.phone}
+                  onChange={e => setForm({...form, phone: e.target.value})}
+                  className={inputClass}
+                />
+              </div>
             </div>
-            <select value={form.industry} onChange={e => setForm({...form, industry: e.target.value})} className={inputClass}>
-              <option value="">Select Industry</option>
-              <option value="restaurant">Restaurant</option>
-              <option value="clinic">Clinic / Healthcare</option>
-              <option value="bank">Bank / Finance</option>
-              <option value="salon">Salon / Beauty</option>
-              <option value="government">Government Services</option>
-              <option value="service">Service Center</option>
-              <option value="other">Other</option>
-            </select>
-            <textarea placeholder="Tell us about your needs..." rows={4} value={form.message} onChange={e => setForm({...form, message: e.target.value})} className={inputClass + " resize-none"} />
+            <div>
+              <label htmlFor="contact-industry" className="text-xs font-semibold text-foreground mb-1.5 block">
+                Industry
+              </label>
+              <select
+                id="contact-industry"
+                value={form.industry}
+                onChange={e => setForm({...form, industry: e.target.value})}
+                className={inputClass}
+              >
+                <option value="">Select Industry</option>
+                <option value="restaurant">Restaurant / Cafe</option>
+                <option value="clinic">Clinic / Healthcare</option>
+                <option value="bank">Bank / Finance</option>
+                <option value="salon">Salon / Spa</option>
+                <option value="government">Government Services</option>
+                <option value="service">Service Center / Retail</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="contact-message" className="text-xs font-semibold text-foreground mb-1.5 block">
+                Message / Requirements (optional)
+              </label>
+              <textarea
+                id="contact-message"
+                placeholder="Tell us about your counter setup or estimated walk-in volume..."
+                rows={4}
+                value={form.message}
+                onChange={e => setForm({...form, message: e.target.value})}
+                className={inputClass + " resize-none"}
+              />
+            </div>
             <div className="flex flex-wrap gap-4">
               <button type="submit" disabled={loading} className="gradient-bg text-primary-foreground px-7 py-3.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity elevated-shadow flex items-center gap-2 disabled:opacity-50">
                 <Send className="w-4 h-4" /> Book a Demo

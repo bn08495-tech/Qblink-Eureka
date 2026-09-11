@@ -195,7 +195,7 @@ const DemoCard = ({ v, i }: { v: DemoVideo; i: number }) => {
 };
 
 const DemoVideosSection = () => (
-  <section id="demo" className="relative w-full max-w-full overflow-hidden">
+  <section id="walkthrough-videos" className="relative w-full max-w-full overflow-hidden scroll-mt-20">
     <div className="absolute inset-0 soft-bg opacity-50" />
     <div className="section-container section-padding relative z-10">
       <div className="mb-12">

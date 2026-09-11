@@ -44,37 +44,49 @@ export const ProblemInfographic = () => {
             <div className="absolute -left-1/4 -top-1/2 w-[150%] h-[200%] bg-[conic-gradient(from_0deg,transparent_0_320deg,hsl(var(--glow)/0.4)_360deg)] animate-radar-sweep origin-center" />
           </div>
 
-          <svg viewBox="0 0 100 44" className="w-full h-full relative z-10" preserveAspectRatio="none">
-            {/* floor */}
-            <line x1="0" y1="42" x2="100" y2="42" stroke="hsl(var(--glow) / 0.4)" strokeWidth="0.2" strokeDasharray="1 1" />
+          <svg viewBox="0 0 100 44" className="w-full h-full relative z-10" preserveAspectRatio="none" role="region" aria-label="Customer queue revenue leak hotspots">
+            {/* floor and silhouettes - decorative */}
+            <g aria-hidden="true" focusable="false">
+              {/* floor */}
+              <line x1="0" y1="42" x2="100" y2="42" stroke="hsl(var(--glow) / 0.4)" strokeWidth="0.2" strokeDasharray="1 1" />
 
-            {/* silhouettes */}
-            {Array.from({ length: 18 }).map((_, i) => {
-              const x = 4 + i * 5.2;
-              const h = 12 + (i % 4) * 2.2;
-              const isNearby = active !== null && Math.abs(spots[active].x - x) < 8;
-              return (
-                <g
-                  key={i}
-                  fill={isNearby ? "hsl(var(--glow) / 0.45)" : "hsl(var(--cream) / 0.16)"}
-                  className="transition-colors duration-300"
-                >
-                  <circle cx={x} cy={42 - h - 2} r="1.6" />
-                  <rect x={x - 1.8} y={42 - h} width="3.6" height={h} rx="1.5" />
-                </g>
-              );
-            })}
+              {/* silhouettes */}
+              {Array.from({ length: 18 }).map((_, i) => {
+                const x = 4 + i * 5.2;
+                const h = 12 + (i % 4) * 2.2;
+                const isNearby = active !== null && Math.abs(spots[active].x - x) < 8;
+                return (
+                  <g
+                    key={i}
+                    fill={isNearby ? "hsl(var(--glow) / 0.45)" : "hsl(var(--cream) / 0.16)"}
+                    className="transition-colors duration-300"
+                  >
+                    <circle cx={x} cy={42 - h - 2} r="1.6" />
+                    <rect x={x - 1.8} y={42 - h} width="3.6" height={h} rx="1.5" />
+                  </g>
+                );
+              })}
+            </g>
 
             {/* hotspots */}
             {spots.map((s, i) => (
               <g
                 key={i}
+                role="button"
+                tabIndex={0}
+                aria-label={`${s.label}: ${s.detail}`}
+                aria-expanded={active === i}
                 onMouseEnter={() => setActive(i)}
                 onMouseLeave={() => setActive(null)}
                 onFocus={() => setActive(i)}
                 onBlur={() => setActive(null)}
-                tabIndex={0}
-                className="cursor-pointer focus:outline-none group"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setActive(active === i ? null : i);
+                  }
+                }}
+                className="cursor-pointer group focus-visible:outline focus-visible:outline-2 focus-visible:outline-[hsl(var(--glow))]"
               >
                 {/* Sonar wave rings */}
                 <circle
@@ -91,13 +103,13 @@ export const ProblemInfographic = () => {
                 </circle>
 
                 {/* Outer hit area */}
-                <circle cx={s.x} cy={s.y * 0.44} r="7" fill="hsl(var(--glow) / 0.15)" className="group-hover:fill-glow/25 transition-all" />
+                <circle cx={s.x} cy={s.y * 0.44} r={active === i ? "8" : "7"} fill={active === i ? "hsl(var(--glow) / 0.3)" : "hsl(var(--glow) / 0.15)"} className="group-hover:fill-glow/25 transition-all" />
 
                 {/* Central Beacon */}
                 <circle
                   cx={s.x}
                   cy={s.y * 0.44}
-                  r={active === i ? "2" : "1.2"}
+                  r={active === i ? "2.2" : "1.2"}
                   fill="hsl(var(--glow))"
                   opacity={active === i ? 1 : 0.85}
                   className="transition-all duration-300"

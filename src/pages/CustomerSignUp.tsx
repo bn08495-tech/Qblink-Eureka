@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { User, Lock, Phone, Mail, ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
+import { User, Lock, Phone, Mail, ArrowLeft, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import logo from "@/assets/qblink-logo.png";
 import SEO from "@/components/SEO";
 import { COUNTRY_CODES, normalizePhone, phoneToEmail, isValidPhone } from "@/lib/phoneAuth";
@@ -15,6 +15,7 @@ const CustomerSignUp = () => {
   const [countryCode, setCountryCode] = useState("+91");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -194,10 +195,13 @@ const CustomerSignUp = () => {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-foreground mb-1.5 block">Full name</label>
+            <label htmlFor="customer-name" className="text-sm font-medium text-foreground mb-1.5 block">Full name</label>
             <div className="relative">
-              <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               <input
+                id="customer-name"
+                type="text"
+                autoComplete="name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
@@ -209,9 +213,12 @@ const CustomerSignUp = () => {
 
           {mode === "phone" ? (
             <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">WhatsApp number</label>
+              <label htmlFor="customer-phone" className="text-sm font-medium text-foreground mb-1.5 block">WhatsApp number</label>
               <div className="flex gap-2">
+                <label htmlFor="customer-country-code" className="sr-only">Country code</label>
                 <select
+                  id="customer-country-code"
+                  aria-label="Country code"
                   value={countryCode}
                   onChange={(e) => setCountryCode(e.target.value)}
                   className="px-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
@@ -223,10 +230,14 @@ const CustomerSignUp = () => {
                   ))}
                 </select>
                 <div className="relative flex-1">
-                  <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                   <input
+                    id="customer-phone"
                     type="tel"
                     inputMode="numeric"
+                    autoComplete="tel"
+                    aria-invalid={Boolean(formError && mode === "phone")}
+                    aria-describedby={formError ? "customer-signup-error" : undefined}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/[^\d\s-]/g, ""))}
                     required
@@ -239,11 +250,15 @@ const CustomerSignUp = () => {
             </div>
           ) : (
             <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
+              <label htmlFor="customer-email" className="text-sm font-medium text-foreground mb-1.5 block">Email</label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                 <input
+                  id="customer-email"
                   type="email"
+                  autoComplete="email"
+                  aria-invalid={Boolean(formError && mode === "email")}
+                  aria-describedby={formError ? "customer-signup-error" : undefined}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -255,23 +270,43 @@ const CustomerSignUp = () => {
           )}
 
           <div>
-            <label className="text-sm font-medium text-foreground mb-1.5 block">Password</label>
+            <label htmlFor="customer-password" className="text-sm font-medium text-foreground mb-1.5 block">Password</label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               <input
-                type="password"
+                id="customer-password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                aria-invalid={Boolean(formError && formError.toLowerCase().includes("password"))}
+                aria-describedby={formError ? "customer-signup-error" : undefined}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
                 placeholder="At least 6 characters"
-                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+                className="w-full pl-10 pr-10 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-controls="customer-password"
+                aria-pressed={showPassword}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors p-1 rounded-md"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
+          <p className="text-xs text-muted-foreground text-center pt-1">
+            By signing up, you agree to our{" "}
+            <Link to="/terms" className="text-primary hover:underline">Terms</Link> and{" "}
+            <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+          </p>
+
           {formError && (
-            <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex gap-2.5">
+            <div id="customer-signup-error" role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex gap-2.5">
               <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
               <p className="text-sm text-destructive font-medium leading-snug">{formError}</p>
             </div>

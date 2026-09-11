@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { Mail, Lock, Building2, Tag, FileText, MapPin, ArrowLeft, Sparkles, Check, Clock, BellRing, Users, Loader2 } from "lucide-react";
+import { Mail, Lock, Building2, Tag, FileText, MapPin, ArrowLeft, Sparkles, Check, Clock, BellRing, Users, Loader2, Eye, EyeOff } from "lucide-react";
 import logo from "@/assets/qblink-logo.png";
 import SEO from "@/components/SEO";
 import { INDUSTRIES, getIndustryDefaults, type IndustryDefaults } from "@/lib/industryDefaults";
@@ -26,6 +26,7 @@ const BusinessSignUp = () => {
   const [step, setStep] = useState<1 | 2>(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [businessName, setBusinessName] = useState("");
   const [category, setCategory] = useState<string>("Clinic");
   const [description, setDescription] = useState("");
@@ -151,9 +152,11 @@ const BusinessSignUp = () => {
         {step === 1 ? (
           /* STEP 1: BUSINESS NAME INPUT SCREEN */
           <form onSubmit={handleStep1Submit} className="bg-card rounded-2xl p-6 sm:p-8 card-shadow space-y-6 animate-in fade-in duration-300">
-            <Field icon={<Building2 className="w-4 h-4 text-primary" />} label="Business Name">
+            <Field id="biz-name" icon={<Building2 className="w-4 h-4 text-primary" />} label="Business Name">
               <input
+                id="biz-name"
                 type="text"
+                autoComplete="organization"
                 value={businessName}
                 onChange={e => setBusinessName(e.target.value)}
                 required
@@ -195,17 +198,50 @@ const BusinessSignUp = () => {
               </button>
             </div>
 
-            <Field icon={<Mail className="w-4 h-4" />} label="Business Email">
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="business@email.com"
-                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
+            <Field id="biz-email" icon={<Mail className="w-4 h-4" />} label="Business Email">
+              <input
+                id="biz-email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                placeholder="business@email.com"
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+              />
             </Field>
-            <Field icon={<Lock className="w-4 h-4" />} label="Password">
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
+            <Field id="biz-password" icon={<Lock className="w-4 h-4" />} label="Password">
+              <div className="relative">
+                <input
+                  id="biz-password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-10 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-controls="biz-password"
+                  aria-pressed={showPassword}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors p-1 rounded-md"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </Field>
-            <Field icon={<Tag className="w-4 h-4" />} label="Industry">
-              <select value={category} onChange={e => setCategory(e.target.value)}
-                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors appearance-none">
+            <Field id="biz-industry" icon={<Tag className="w-4 h-4" />} label="Industry">
+              <select
+                id="biz-industry"
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors appearance-none"
+              >
                 {INDUSTRIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </Field>
@@ -248,11 +284,16 @@ const BusinessSignUp = () => {
 
               {/* Estimated service time */}
               <div>
-                <p className="text-xs font-medium text-foreground mb-1.5">
+                <label htmlFor="biz-service-time" className="text-xs font-medium text-foreground mb-1.5 block">
                   Estimated service time · <span className="text-primary">{overrides.estimated_service_time} min</span>
-                </p>
+                </label>
                 <input
+                  id="biz-service-time"
                   type="range"
+                  aria-label="Estimated service time"
+                  aria-valuemin={2}
+                  aria-valuemax={60}
+                  aria-valuenow={overrides.estimated_service_time}
                   min={2}
                   max={60}
                   step={1}
@@ -304,14 +345,33 @@ const BusinessSignUp = () => {
               <ImpactPreview overrides={overrides} />
             </div>
 
-            <Field icon={<FileText className="w-4 h-4" />} label="Description (optional)">
-              <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description of your business" rows={2}
-                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors resize-none" />
+            <Field id="biz-description" icon={<FileText className="w-4 h-4" />} label="Description (optional)">
+              <textarea
+                id="biz-description"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Brief description of your business"
+                rows={2}
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors resize-none"
+              />
             </Field>
-            <Field icon={<MapPin className="w-4 h-4" />} label="Address (optional)">
-              <input type="text" value={address} onChange={e => setAddress(e.target.value)} placeholder="City or area"
-                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors" />
+            <Field id="biz-address" icon={<MapPin className="w-4 h-4" />} label="Address (optional)">
+              <input
+                id="biz-address"
+                type="text"
+                autoComplete="street-address"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                placeholder="City or area"
+                className="w-full pl-10 pr-4 py-3.5 rounded-xl bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+              />
             </Field>
+
+            <p className="text-xs text-muted-foreground text-center pt-2">
+              By creating a business account, you agree to our{" "}
+              <Link to="/terms" className="text-primary hover:underline">Terms</Link> and{" "}
+              <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+            </p>
 
             <button type="submit" disabled={loading}
               className="w-full gradient-bg text-primary-foreground py-3.5 rounded-xl text-sm font-semibold hover:opacity-90 active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
@@ -329,11 +389,11 @@ const BusinessSignUp = () => {
   );
 };
 
-const Field = ({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) => (
+const Field = ({ id, icon, label, children }: { id: string; icon: React.ReactNode; label: string; children: React.ReactNode }) => (
   <div>
-    <label className="text-sm font-medium text-foreground mb-1.5 block">{label}</label>
+    <label htmlFor={id} className="text-sm font-medium text-foreground mb-1.5 block">{label}</label>
     <div className="relative">
-      <span className="absolute left-3 top-3.5 text-muted-foreground">{icon}</span>
+      <span className="absolute left-3 top-3.5 text-muted-foreground pointer-events-none" aria-hidden="true">{icon}</span>
       {children}
     </div>
   </div>

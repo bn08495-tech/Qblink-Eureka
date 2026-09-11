@@ -46,7 +46,7 @@ export const LiveQueueDemo = () => {
   const strokeDashoffset = circumference - progressFraction * circumference;
 
   return (
-    <section id="demo" className="relative py-24 md:py-32 overflow-hidden bg-[hsl(var(--surface-warm)/0.4)]" aria-label="Interactive demo">
+    <section id="demo" className="relative py-24 md:py-32 overflow-hidden bg-[hsl(var(--surface-warm)/0.4)] scroll-mt-20" aria-label="Interactive demo">
       {/* Background kinetic ambient halos */}
       <div className="absolute top-1/3 right-1/4 w-96 h-96 rounded-full bg-[hsl(var(--brand-glow)/0.07)] blur-3xl animate-pulse-halo pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/4 w-80 h-80 rounded-full bg-[hsl(var(--brand-blue)/0.08)] blur-3xl animate-float-reverse pointer-events-none" />
@@ -267,7 +267,7 @@ export const LiveQueueDemo = () => {
                         >
                           {/* Circular SVG Progress Ring */}
                           <div className="relative w-36 h-36 mx-auto flex items-center justify-center">
-                            <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                            <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
                               <circle
                                 cx="60"
                                 cy="60"
@@ -323,7 +323,7 @@ export const LiveQueueDemo = () => {
                   <div className="pt-2 text-center">
                     <div className="text-[10px] font-mono text-muted-foreground flex items-center justify-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      <span>Zero battery drain · Real-time push enabled</span>
+                      <span>Lightweight & battery-efficient · Real-time push enabled</span>
                     </div>
                   </div>
                 </div>

@@ -31,7 +31,7 @@ export const ThreeMotions = () => (
 
       {/* Interactive Timeline Pipeline (Desktop) */}
       <div className="mt-16 relative hidden md:block rounded-3xl bg-deep/25 border border-glow/20 p-8 shadow-2xl backdrop-blur-sm">
-        <svg viewBox="0 0 1200 240" className="w-full">
+        <svg viewBox="0 0 1200 240" className="w-full" aria-hidden="true" focusable="false">
           <defs>
             <linearGradient id="threadGlow" x1="0" x2="1">
               <stop offset="0%" stopColor="hsl(var(--glow))" stopOpacity="0.2" />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEarlyAccessSubmitted } from "@/lib/trustAnalytics";
 import { toast } from "sonner";
@@ -173,10 +174,70 @@ const AffiliatePage = () => {
                     onClear={() => { setForm(f => ({ ...f, name: "", phone: "" })); setPrefilled(false); }}
                     onUpdate={(n, p) => { setForm(f => ({ ...f, name: n, phone: p })); setPrefilled(true); }}
                   />
-                  <input type="text" placeholder="Your Name *" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputClass} />
-                  <input type="email" placeholder="Email Address *" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className={inputClass} />
-                  <input type="tel" required placeholder="Phone *" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className={inputClass} />
-                  <input type="text" placeholder="Company / Organization (optional)" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} className={inputClass} />
+                  <div>
+                    <label htmlFor="affiliate-name" className="text-xs font-semibold text-foreground mb-1.5 block">
+                      Your Name <span className="text-primary">*</span>
+                    </label>
+                    <input
+                      id="affiliate-name"
+                      type="text"
+                      autoComplete="name"
+                      placeholder="e.g. Ramesh Kumar"
+                      required
+                      value={form.name}
+                      onChange={e => setForm({ ...form, name: e.target.value })}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="affiliate-email" className="text-xs font-semibold text-foreground mb-1.5 block">
+                      Email Address <span className="text-primary">*</span>
+                    </label>
+                    <input
+                      id="affiliate-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@company.com"
+                      required
+                      value={form.email}
+                      onChange={e => setForm({ ...form, email: e.target.value })}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="affiliate-phone" className="text-xs font-semibold text-foreground mb-1.5 block">
+                      Phone <span className="text-primary">*</span>
+                    </label>
+                    <input
+                      id="affiliate-phone"
+                      type="tel"
+                      autoComplete="tel"
+                      required
+                      placeholder="+91 98765 43210"
+                      value={form.phone}
+                      onChange={e => setForm({ ...form, phone: e.target.value })}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="affiliate-company" className="text-xs font-semibold text-foreground mb-1.5 block">
+                      Company / Organization (optional)
+                    </label>
+                    <input
+                      id="affiliate-company"
+                      type="text"
+                      autoComplete="organization"
+                      placeholder="Your agency, consultancy, or company"
+                      value={form.company}
+                      onChange={e => setForm({ ...form, company: e.target.value })}
+                      className={inputClass}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center pt-1">
+                    By submitting, you agree to our{" "}
+                    <Link to="/terms" className="text-primary hover:underline">Terms</Link> and{" "}
+                    <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
+                  </p>
                   <button type="submit" disabled={loading} className="w-full gradient-bg text-primary-foreground py-3.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
                     <Send className="w-4 h-4" /> {loading ? "Submitting..." : "Join Affiliate Program"}
                   </button>

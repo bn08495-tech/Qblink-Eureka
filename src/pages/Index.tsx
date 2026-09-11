@@ -15,6 +15,7 @@ import { InterviewFAQ } from "@/components/qb/InterviewFAQ";
 import { Signature } from "@/components/qb/Signature";
 import DemoVideosSection from "@/components/DemoVideosSection";
 import { ReviewsSection } from "@/components/qb/ReviewsSection";
+import ContactSection from "@/components/ContactSection";
 
 const ChaosToClarityExperience = lazy(() => import("@/features/chaosToClarity/ChaosToClarityExperience"));
 const IndustryMorphingExperience = lazy(() => import("@/features/industryMorphing/IndustryMorphingExperience"));
@@ -91,7 +92,7 @@ const Index = () => (
     <main>
       <Hero />
       <ProblemInfographic />
-      <div id="simulation" className="py-12 sm:py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+      <div id="simulation" className="scroll-mt-20 py-12 sm:py-16 px-4 sm:px-6 max-w-7xl mx-auto">
         <Suspense fallback={<div className="h-96 flex items-center justify-center text-cream/40 font-mono-caps text-xs">Loading Customer Flow Simulation...</div>}>
           <ChaosToClarityExperience />
         </Suspense>
@@ -101,18 +102,19 @@ const Index = () => (
       <LiveQueueDemo />
       <ReliefBento />
       <DashboardPreview />
-      <div id="industries" className="py-12 sm:py-16">
+      <div id="industries" className="scroll-mt-20 py-12 sm:py-16">
         <Suspense fallback={<div className="h-96 flex items-center justify-center text-muted-foreground text-xs font-mono">Loading Industry Experience...</div>}>
           <IndustryMorphingExperience />
         </Suspense>
       </div>
-      <div id="roi" className="py-12 sm:py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+      <div id="roi" className="scroll-mt-20 py-12 sm:py-16 px-4 sm:px-6 max-w-7xl mx-auto">
         <BusinessRoiCalculator />
       </div>
       <ReviewsSection />
       <DemoVideosSection />
       <Pricing />
-      <div id="faq">
+      <ContactSection />
+      <div id="faq" className="scroll-mt-20">
         <InterviewFAQ />
       </div>
       <Signature />

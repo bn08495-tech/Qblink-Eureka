@@ -75,11 +75,13 @@ export const Signature = () => (
           </div>
         </div>
         <div>
-          <div className="font-mono-caps text-cream/30 mb-3 text-xs">Company</div>
+          <div className="font-mono-caps text-cream/30 mb-3 text-xs">Company & Legal</div>
           <div className="space-y-2">
             <a href="#faq" className="block text-cream/60 hover:text-glow transition-colors">FAQ</a>
             <Link to="/affiliate" className="block text-cream/60 hover:text-glow transition-colors">Affiliate</Link>
-            <a href="mailto:teamqblink@gmail.com" className="block text-cream/60 hover:text-glow transition-colors">Contact</a>
+            <Link to="/privacy" className="block text-cream/60 hover:text-glow transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="block text-cream/60 hover:text-glow transition-colors">Terms of Service</Link>
+            <a href="#contact" className="block text-cream/60 hover:text-glow transition-colors">Contact</a>
           </div>
         </div>
         <div>
@@ -100,9 +102,11 @@ export const Signature = () => (
           <Monogram className="w-6 h-6 text-glow" />
           <span>Qblink · est. 2025 · India</span>
         </div>
-        <div className="flex gap-6">
+        <div className="flex flex-wrap gap-4 sm:gap-6 text-xs">
           <Link to="/affiliate" className="hover:text-glow">Affiliate</Link>
-          <a href="mailto:teamqblink@gmail.com" className="hover:text-glow">Contact</a>
+          <Link to="/privacy" className="hover:text-glow">Privacy</Link>
+          <Link to="/terms" className="hover:text-glow">Terms</Link>
+          <a href="#contact" className="hover:text-glow">Contact</a>
           <Link to="/auth/signin" className="hover:text-glow">Sign in</Link>
         </div>
         <span className="text-cream/30">Hardware-free by conviction.</span>

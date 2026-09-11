@@ -8,11 +8,12 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 const navLinks = [
-  { label: "How It Works", href: "/#how-it-works" },
+  { label: "Product", href: "/#product" },
+  { label: "Simulation", href: "/#simulation" },
   { label: "Industries", href: "/#industries" },
-  { label: "Features", href: "/#features" },
+  { label: "ROI Estimator", href: "/#roi" },
+  { label: "Pricing", href: "/#pricing" },
   { label: "Affiliate", href: "/affiliate" },
-  { label: "About", href: "/#about" },
   { label: "Contact", href: "/#contact" },
 ];
 

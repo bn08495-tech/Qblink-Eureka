@@ -14,6 +14,7 @@ const links = [
   { label: "Reviews", href: "#reviews" },
   { label: "ROI Estimator", href: "#roi" },
   { label: "Pricing", href: "#pricing" },
+  { label: "Contact", href: "#contact" },
   { label: "FAQ", href: "#faq" },
   { label: "Demo", href: "#demo" },
 ];
@@ -38,7 +39,7 @@ export const TopNav = () => {
       setScrolled(window.scrollY > 24);
 
       // Simple active section detection
-      const sectionIds = ["product", "simulation", "industries", "reviews", "roi", "pricing", "faq", "demo"];
+      const sectionIds = ["product", "simulation", "industries", "reviews", "roi", "pricing", "contact", "faq", "demo"];
       for (const id of sectionIds) {
         const el = document.getElementById(id);
         if (el) {

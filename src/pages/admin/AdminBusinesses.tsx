@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { toast } from "sonner";
-import { Search, Download, Eye, Pause, Play, Trash2, RotateCcw, X } from "lucide-react";
+import { Search, Download, Eye, Pause, Play, Trash2, RotateCcw, X, AlertCircle, RefreshCw } from "lucide-react";
 import BusinessHealthBarChart from "@/components/health/BusinessHealthBarChart";
 import HealthFactorDetail from "@/components/health/HealthFactorDetail";
 import HealthAIAssistant from "@/components/health/HealthAIAssistant";
@@ -38,6 +38,9 @@ const BAND_CLS: Record<string, string> = {
 
 const AdminBusinesses = () => {
   const [rows, setRows] = useState<BizRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("All");
   const [selected, setSelected] = useState<BizRow | null>(null);
@@ -53,41 +56,62 @@ const AdminBusinesses = () => {
   }, []);
 
   const fetchData = async () => {
-    const { data: bizs } = await supabase.from("businesses").select("id, name, category, owner_id, created_at").order("created_at", { ascending: false });
-    if (!bizs) { setRows([]); return; }
-    const { data: queues } = await supabase.from("queues").select("id, business_id, status");
-    const { data: visitors } = await supabase.from("queue_visitors").select("queue_id, status, joined_at, served_at");
+    if (rows.length === 0) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
+    setError(null);
+    try {
+      const { data: bizs, error: bizErr } = await supabase.from("businesses").select("id, name, category, owner_id, created_at").order("created_at", { ascending: false });
+      if (bizErr) throw bizErr;
+      if (!bizs) { setRows([]); return; }
+      const { data: queues, error: qErr } = await supabase.from("queues").select("id, business_id, status");
+      if (qErr) throw qErr;
+      const { data: visitors, error: vErr } = await supabase.from("queue_visitors").select("queue_id, status, joined_at, served_at");
+      if (vErr) throw vErr;
 
-    const real: BizRow[] = bizs.map(b => {
-      const bQueues = queues?.filter(q => q.business_id === b.id) || [];
-      const qIds = bQueues.map(q => q.id);
-      const bVisitors = visitors?.filter(v => qIds.includes(v.queue_id)) || [];
-      const served = bVisitors.filter(v => v.status === "served");
-      const waitTimes = served.filter(v => v.served_at).map(v => (new Date(v.served_at!).getTime() - new Date(v.joined_at).getTime()) / 60000);
-      return {
-        id: b.id,
-        name: b.name,
-        category: b.category || "Other",
-        ownerId: b.owner_id,
-        status: bQueues.some(q => q.status === "active") ? "active" : bQueues.length ? "inactive" : "no-queue",
-        queues: bQueues.length,
-        served: served.length,
-        avgWait: waitTimes.length ? Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length) : 0,
-        createdAt: b.created_at,
-        healthScore: null,
-        healthBand: null,
-      };
-    });
-    setRows(real);
+      const real: BizRow[] = bizs.map(b => {
+        const bQueues = queues?.filter(q => q.business_id === b.id) || [];
+        const qIds = bQueues.map(q => q.id);
+        const bVisitors = visitors?.filter(v => qIds.includes(v.queue_id)) || [];
+        const served = bVisitors.filter(v => v.status === "served");
+        const waitTimes = served.filter(v => v.served_at).map(v => (new Date(v.served_at!).getTime() - new Date(v.joined_at).getTime()) / 60000);
+        return {
+          id: b.id,
+          name: b.name,
+          category: b.category || "Other",
+          ownerId: b.owner_id,
+          status: bQueues.some(q => q.status === "active") ? "active" : bQueues.length ? "inactive" : "no-queue",
+          queues: bQueues.length,
+          served: served.length,
+          avgWait: waitTimes.length ? Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length) : 0,
+          createdAt: b.created_at,
+          healthScore: null,
+          healthBand: null,
+        };
+      });
+      setRows(real);
 
-    // Fetch health scores in parallel (admin authorized via SECURITY DEFINER)
-    const health = await Promise.all(real.map(async (r) => {
-      const { data } = await supabase.rpc("get_business_health", { p_business_id: r.id, p_days: 7 });
-      const row: any = Array.isArray(data) ? data[0] : data;
-      return { id: r.id, score: row?.score != null ? Number(row.score) : null, band: row?.band ?? null };
-    }));
-    const map = new Map(health.map(h => [h.id, h]));
-    setRows(real.map(r => ({ ...r, healthScore: map.get(r.id)?.score ?? null, healthBand: map.get(r.id)?.band ?? null })));
+      // Fetch health scores in parallel (admin authorized via SECURITY DEFINER)
+      try {
+        const health = await Promise.all(real.map(async (r) => {
+          const { data } = await supabase.rpc("get_business_health", { p_business_id: r.id, p_days: 7 });
+          const row: any = Array.isArray(data) ? data[0] : data;
+          return { id: r.id, score: row?.score != null ? Number(row.score) : null, band: row?.band ?? null };
+        }));
+        const map = new Map(health.map(h => [h.id, h]));
+        setRows(real.map(r => ({ ...r, healthScore: map.get(r.id)?.score ?? null, healthBand: map.get(r.id)?.band ?? null })));
+      } catch (healthErr) {
+        console.warn("Could not fetch business health scores:", healthErr);
+      }
+    } catch (err: any) {
+      console.error("AdminBusinesses fetchData error:", err);
+      setError(err?.message || "Failed to load businesses");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
   const filtered = rows.filter(r => {
@@ -134,11 +158,32 @@ const AdminBusinesses = () => {
       <div className="flex items-start justify-between flex-wrap gap-3 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Businesses</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage all businesses on Qblink — {rows.length} total · Live</p>
+          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
+            Manage all businesses on Qblink —{" "}
+            {loading ? (
+              <span className="inline-block w-16 h-4 bg-muted animate-pulse rounded align-middle" data-testid="businesses-count-skeleton" />
+            ) : error ? (
+              <span className="text-destructive font-medium">Error loading count</span>
+            ) : (
+              <span>{rows.length} total</span>
+            )}{" "}
+            · Live
+          </p>
         </div>
-        <button onClick={exportCSV} className="bg-card border border-border text-foreground px-4 py-2 rounded-xl text-sm font-medium hover:bg-muted transition-colors flex items-center gap-2">
-          <Download className="w-4 h-4" /> Export CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => fetchData(true)}
+            disabled={loading || refreshing}
+            className="bg-card border border-border text-foreground px-3 py-2 rounded-xl text-sm font-medium hover:bg-muted transition-colors flex items-center gap-2 disabled:opacity-50"
+            title="Refresh businesses"
+          >
+            <RotateCcw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+          <button onClick={exportCSV} disabled={loading || rows.length === 0} className="bg-card border border-border text-foreground px-4 py-2 rounded-xl text-sm font-medium hover:bg-muted transition-colors flex items-center gap-2 disabled:opacity-50">
+            <Download className="w-4 h-4" /> Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="bg-card rounded-2xl p-4 card-shadow mb-4 flex flex-wrap gap-3 items-center">
@@ -160,7 +205,13 @@ const AdminBusinesses = () => {
             <h2 className="font-bold text-foreground flex items-center gap-2"><Activity className="w-4 h-4 text-primary" /> Queue Health Across Businesses</h2>
             <p className="text-xs text-muted-foreground">Click a bar to open that business's factor breakdown + AI coach.</p>
           </div>
-          <p className="text-xs text-muted-foreground">{rows.filter(r => r.healthScore != null).length} of {rows.length} businesses scored</p>
+          <p className="text-xs text-muted-foreground">
+            {loading ? (
+              <span className="inline-block w-24 h-3 bg-muted animate-pulse rounded" />
+            ) : (
+              `${rows.filter(r => r.healthScore != null).length} of ${rows.length} businesses scored`
+            )}
+          </p>
         </div>
         <BusinessHealthBarChart
           rows={filtered.map(r => ({ id: r.id, name: r.name, score: r.healthScore, band: r.healthBand }))}
@@ -185,38 +236,69 @@ const AdminBusinesses = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filtered.map(r => (
-                <tr key={r.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3 font-medium text-foreground">{r.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{r.category}</td>
-                  <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{new Date(r.createdAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${STATUS_CLS[r.status] || "bg-muted text-muted-foreground"}`}>{r.status}</span></td>
-                  <td className="px-4 py-3 hidden sm:table-cell">{r.queues}</td>
-                  <td className="px-4 py-3 hidden sm:table-cell">{r.served}</td>
-                  <td className="px-4 py-3 hidden md:table-cell">{r.avgWait}m</td>
-                  <td className="px-4 py-3">
-                    {r.healthScore == null ? (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    ) : (
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${BAND_CLS[r.healthBand || "good"]}`}>
-                        {Math.round(r.healthScore)} · {r.healthBand}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <IconBtn title="View" onClick={() => setSelected(r)}><Eye className="w-3.5 h-3.5" /></IconBtn>
-                      <IconBtn title={r.status === "active" ? "Pause queues" : "Activate queues"} onClick={() => action("toggle", r)}>
-                        {r.status === "active" ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                      </IconBtn>
-                      <IconBtn title="Reset queues" onClick={() => action("reset", r)}><RotateCcw className="w-3.5 h-3.5" /></IconBtn>
-                      <IconBtn title="Delete" onClick={() => action("delete", r)} danger><Trash2 className="w-3.5 h-3.5" /></IconBtn>
-                    </div>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-4 py-3"><div className="h-4 w-32 bg-muted rounded" /></td>
+                    <td className="px-4 py-3 hidden md:table-cell"><div className="h-4 w-20 bg-muted rounded" /></td>
+                    <td className="px-4 py-3 hidden lg:table-cell"><div className="h-4 w-24 bg-muted rounded" /></td>
+                    <td className="px-4 py-3"><div className="h-4 w-16 bg-muted rounded-full" /></td>
+                    <td className="px-4 py-3 hidden sm:table-cell"><div className="h-4 w-8 bg-muted rounded" /></td>
+                    <td className="px-4 py-3 hidden sm:table-cell"><div className="h-4 w-8 bg-muted rounded" /></td>
+                    <td className="px-4 py-3 hidden md:table-cell"><div className="h-4 w-12 bg-muted rounded" /></td>
+                    <td className="px-4 py-3"><div className="h-4 w-16 bg-muted rounded-full" /></td>
+                    <td className="px-4 py-3 text-right"><div className="h-6 w-20 bg-muted rounded ml-auto" /></td>
+                  </tr>
+                ))
+              ) : error ? (
+                <tr>
+                  <td colSpan={10} className="px-4 py-12 text-center">
+                    <p className="text-sm font-medium text-destructive mb-2">{error}</p>
+                    <button
+                      onClick={() => fetchData()}
+                      className="px-4 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-semibold hover:opacity-90 transition-opacity"
+                    >
+                      Retry Loading
+                    </button>
                   </td>
                 </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr><td colSpan={10} className="px-4 py-12 text-center text-sm text-muted-foreground">No businesses match your filters.</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                    {search || filter !== "All" ? "No businesses match your filters." : "No businesses found in the system yet."}
+                  </td>
+                </tr>
+              ) : (
+                filtered.map(r => (
+                  <tr key={r.id} className="hover:bg-muted/30">
+                    <td className="px-4 py-3 font-medium text-foreground">{r.name}</td>
+                    <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{r.category}</td>
+                    <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{new Date(r.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${STATUS_CLS[r.status] || "bg-muted text-muted-foreground"}`}>{r.status}</span></td>
+                    <td className="px-4 py-3 hidden sm:table-cell">{r.queues}</td>
+                    <td className="px-4 py-3 hidden sm:table-cell">{r.served}</td>
+                    <td className="px-4 py-3 hidden md:table-cell">{r.avgWait}m</td>
+                    <td className="px-4 py-3">
+                      {r.healthScore == null ? (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      ) : (
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${BAND_CLS[r.healthBand || "good"]}`}>
+                          {Math.round(r.healthScore)} · {r.healthBand}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <IconBtn title="View" onClick={() => setSelected(r)}><Eye className="w-3.5 h-3.5" /></IconBtn>
+                        <IconBtn title={r.status === "active" ? "Pause queues" : "Activate queues"} onClick={() => action("toggle", r)}>
+                          {r.status === "active" ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                        </IconBtn>
+                        <IconBtn title="Reset queues" onClick={() => action("reset", r)}><RotateCcw className="w-3.5 h-3.5" /></IconBtn>
+                        <IconBtn title="Delete" onClick={() => action("delete", r)} danger><Trash2 className="w-3.5 h-3.5" /></IconBtn>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

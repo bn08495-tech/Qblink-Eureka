@@ -30,7 +30,7 @@ export const IndustrySelectorPills: React.FC<IndustrySelectorPillsProps> = ({
     <div
       role="tablist"
       aria-label="Industry Presets"
-      className="flex items-center justify-center gap-2 p-1.5 rounded-2xl bg-muted/60 border border-border/80 max-w-2xl mx-auto backdrop-blur-md overflow-x-auto"
+      className="flex items-center justify-start sm:justify-center gap-2 p-1.5 rounded-2xl bg-muted/60 border border-border/80 w-full max-w-2xl mx-auto backdrop-blur-md overflow-x-auto scrollbar-none"
     >
       {industries.map((ind, index) => {
         const isSelected = selectedIndustry === ind.id;

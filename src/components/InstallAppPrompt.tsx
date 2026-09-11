@@ -63,12 +63,13 @@ const InstallAppPrompt = () => {
     };
   }, [isIOS]);
 
-  // Don't show on home/kiosk/public/onboarding routes
+  // Don't show on home/kiosk/public/onboarding/auth routes
   const blocked =
     pathname === "/" ||
     pathname.startsWith("/display/") ||
     pathname.startsWith("/onboarding") ||
-    pathname.startsWith("/install");
+    pathname.startsWith("/install") ||
+    pathname.startsWith("/auth");
   if (hidden || blocked) return null;
 
   const handleClick = async () => {

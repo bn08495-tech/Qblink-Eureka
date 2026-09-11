@@ -145,7 +145,7 @@ const Tile = ({ e, i }: { e: Env; i: number }) => {
     <motion.article
       initial={{ opacity: 0, y: 48 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
+      viewport={{ once: true, margin: "0px", amount: 0.1 }}
       transition={{ duration: 0.7, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
       className={`group relative overflow-hidden rounded-sm cursor-pointer isolate
         border border-border-hairline
@@ -333,7 +333,7 @@ export const Environments = () => (
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
+        viewport={{ once: true, margin: "0px", amount: 0.1 }}
         transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         className="mt-24 sm:mt-32 text-center"
       >

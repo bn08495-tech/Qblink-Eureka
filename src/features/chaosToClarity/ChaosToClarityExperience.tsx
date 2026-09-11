@@ -75,19 +75,22 @@ export const ChaosToClarityExperience: React.FC<ChaosToClarityExperienceProps> =
         <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-2xl mx-auto">
           <button
             onClick={() => setQueueState((prev) => ({ ...prev, step: 1 }))}
-            className={`p-3 rounded-2xl border text-center transition-all ${
+            className={`p-2.5 sm:p-3 rounded-2xl border text-center transition-all ${
               queueState.step === 1
                 ? "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/20 border-primary"
                 : "bg-card border-border text-muted-foreground hover:text-foreground"
             }`}
           >
             <span className="text-[10px] font-mono block">STEP 1</span>
-            <span className="text-xs font-bold truncate">1. The Problem</span>
+            <span className="text-xs font-bold block truncate">
+              <span className="sm:hidden">Problem</span>
+              <span className="hidden sm:inline">1. The Problem</span>
+            </span>
           </button>
 
           <button
             onClick={handleScanQR}
-            className={`p-3 rounded-2xl border text-center transition-all ${
+            className={`p-2.5 sm:p-3 rounded-2xl border text-center transition-all ${
               queueState.step === 2
                 ? "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/20 border-primary"
                 : queueState.step > 2
@@ -96,19 +99,25 @@ export const ChaosToClarityExperience: React.FC<ChaosToClarityExperienceProps> =
             }`}
           >
             <span className="text-[10px] font-mono block">STEP 2</span>
-            <span className="text-xs font-bold truncate">2. Scan & Transform</span>
+            <span className="text-xs font-bold block truncate">
+              <span className="sm:hidden">Scan QR</span>
+              <span className="hidden sm:inline">2. Scan & Transform</span>
+            </span>
           </button>
 
           <button
             onClick={handleCallNext}
-            className={`p-3 rounded-2xl border text-center transition-all ${
+            className={`p-2.5 sm:p-3 rounded-2xl border text-center transition-all ${
               queueState.step === 3
                 ? "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/20 border-primary"
                 : "bg-card border-border text-muted-foreground hover:text-foreground"
             }`}
           >
             <span className="text-[10px] font-mono block">STEP 3</span>
-            <span className="text-xs font-bold truncate">3. Live Pocket Flow</span>
+            <span className="text-xs font-bold block truncate">
+              <span className="sm:hidden">Live Flow</span>
+              <span className="hidden sm:inline">3. Live Pocket Flow</span>
+            </span>
           </button>
         </div>
 

@@ -39,7 +39,7 @@ export const MorphBusinessCard: React.FC<MorphBusinessCardProps> = ({ industry }
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
                 Now Serving
               </span>
-              <span className="font-mono text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5 block">
+              <span className="font-mono text-xl sm:text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5 block whitespace-nowrap">
                 #{business.nowServingToken}
               </span>
             </div>
@@ -47,7 +47,7 @@ export const MorphBusinessCard: React.FC<MorphBusinessCardProps> = ({ industry }
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
                 Active Line
               </span>
-              <span className="font-mono text-2xl font-black text-foreground mt-0.5 block">
+              <span className="font-mono text-xl sm:text-2xl font-black text-foreground mt-0.5 block whitespace-nowrap">
                 {business.waitingCountText.split(" ")[0]}
               </span>
             </div>
@@ -56,10 +56,10 @@ export const MorphBusinessCard: React.FC<MorphBusinessCardProps> = ({ industry }
           {/* Service Velocity Metric */}
           <div className="p-3 rounded-xl bg-muted/20 border border-border/60 flex items-center justify-between text-xs">
             <span className="text-muted-foreground flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-emerald-500" />
+              <Activity className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
               <span>Throughput Velocity:</span>
             </span>
-            <span className="font-mono font-bold text-foreground">{business.velocityMetric}</span>
+            <span className="font-mono font-bold text-foreground shrink-0">{business.velocityMetric}</span>
           </div>
 
           {/* Sample Line Manifest */}
@@ -71,13 +71,13 @@ export const MorphBusinessCard: React.FC<MorphBusinessCardProps> = ({ industry }
               {business.manifestSample.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between text-xs p-2 rounded-lg bg-background border border-border/60"
+                  className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-background border border-border/60"
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-primary">#{item.token}</span>
-                    <span className="font-medium text-foreground">{item.name}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-mono font-bold text-primary shrink-0">#{item.token}</span>
+                    <span className="font-medium text-foreground truncate">{item.name}</span>
                   </div>
-                  <span className="text-[11px] text-muted-foreground font-mono">{item.detail}</span>
+                  <span className="text-[11px] text-muted-foreground font-mono shrink-0 text-right">{item.detail}</span>
                 </div>
               ))}
             </div>

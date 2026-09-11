@@ -167,13 +167,13 @@ Potential Monthly Retained ${preset.visitorTerm}: ${outputs.monthlyCustomersReta
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Assumption Controls (6 cols) */}
           <div className="lg:col-span-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-foreground">
                 1. Your Business Assumptions
               </h3>
               <button
                 onClick={handleReset}
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 font-semibold transition-colors"
+                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 font-semibold transition-colors shrink-0"
               >
                 <RotateCcw className="w-3 h-3" /> Reset Defaults
               </button>

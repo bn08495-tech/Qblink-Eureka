@@ -145,10 +145,7 @@ const GlobalBackButton = () => {
     pathname.startsWith("/pickup") ||
     pathname.startsWith("/join") ||
     pathname.startsWith("/onboarding") ||
-    pathname.startsWith("/auth/signin") ||
-    pathname.startsWith("/auth/forgot-password") ||
-    pathname.startsWith("/auth/customer") ||
-    pathname.startsWith("/auth/business") ||
+    pathname.startsWith("/auth") ||
     pathname.startsWith("/install");
   if (hidden) return null;
   return <BackButton />;

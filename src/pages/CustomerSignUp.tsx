@@ -80,11 +80,19 @@ const CustomerSignUp = () => {
 
       if (data.user) {
         const userId = data.user.id;
-        // Insert role
-        const { error: roleErr } = await supabase
-          .from("user_roles")
-          .upsert({ user_id: userId, role: "customer" }, { onConflict: "user_id" });
-        if (roleErr) console.error("Error creating user role:", roleErr);
+        // Insert role if not already created
+        try {
+          const { data: existingRole } = await supabase
+            .from("user_roles")
+            .select("id")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (!existingRole) {
+            await supabase.from("user_roles").insert({ user_id: userId, role: "customer" });
+          }
+        } catch (roleErr) {
+          console.error("Error creating user role:", roleErr);
+        }
 
         // Insert customer profile
         const { error: profErr } = await supabase

@@ -287,7 +287,7 @@ const CustomerDashboard = () => {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search businesses by name or location…"
+              placeholder="Search businesses…"
               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
@@ -428,7 +428,7 @@ const CustomerDashboard = () => {
                       ) : q ? "Queue closed" : "No queue"}
                     </span>
                     {b.is_sponsored ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary text-primary font-medium">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold shadow-xs">
                         Sponsored
                       </span>
                     ) : b.is_featured ? (

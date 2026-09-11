@@ -397,7 +397,7 @@ export default function AIAssistant({ mode, businessId, suggestions, queueContex
     <>
       <motion.button
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-50 gradient-bg text-primary-foreground rounded-full p-4 shadow-lg flex items-center gap-2"
+        className="fixed bottom-20 right-4 md:bottom-5 md:right-5 z-50 gradient-bg text-primary-foreground rounded-full p-3.5 sm:p-4 shadow-lg flex items-center gap-2"
         aria-label="Open AI assistant"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{

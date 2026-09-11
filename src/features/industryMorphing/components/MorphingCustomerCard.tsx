@@ -42,7 +42,7 @@ export const MorphCustomerCard: React.FC<MorphCustomerCardProps> = ({ industry }
               <span className="text-xs font-semibold text-foreground">{customer.name}</span>
             </div>
             <div className="mt-1 flex items-baseline justify-between">
-              <span className="font-mono text-3xl sm:text-4xl font-black text-primary tracking-tight">
+              <span className="font-mono text-2xl sm:text-4xl font-black text-primary tracking-tight whitespace-nowrap shrink-0">
                 #{customer.tokenNumber}
               </span>
               <div className="text-right">

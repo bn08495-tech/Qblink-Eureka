@@ -20,10 +20,10 @@ export const RoiCalculatorPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Link
               to="/"
-              className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-xl border border-border bg-card transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground px-2.5 sm:px-3 py-1.5 rounded-xl border border-border bg-card transition-colors shrink-0 whitespace-nowrap"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Qblink</span>
+              <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+              <span><span className="sm:hidden">Back</span><span className="hidden sm:inline">Back to Qblink</span></span>
             </Link>
             <div className="h-4 w-[1px] bg-border hidden sm:block" />
             <div className="flex items-center gap-2">

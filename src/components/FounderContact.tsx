@@ -43,7 +43,7 @@ const FounderContact = () => {
     <motion.section
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
+      viewport={{ once: true, margin: "0px", amount: 0.1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="mb-8"
     >

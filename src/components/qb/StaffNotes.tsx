@@ -47,7 +47,7 @@ export const StaffNotes = () => (
           <motion.article
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
+            viewport={{ once: true, margin: "0px", amount: 0.1 }}
             transition={{ duration: 0.7, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
             key={i}
             className={`cream-surface p-8 ticket-shadow ${n.offset} transition-transform hover:rotate-0 hover:scale-[1.02] duration-500`}
